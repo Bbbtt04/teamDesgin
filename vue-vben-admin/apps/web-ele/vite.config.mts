@@ -1,6 +1,9 @@
 import { defineConfig } from '@vben/vite-config';
 
 import ElementPlus from 'unplugin-element-plus/vite';
+import Components from 'unplugin-vue-components/vite';
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import AutoImport from 'unplugin-auto-import/vite';
 
 export default defineConfig(async () => {
   return {
@@ -9,6 +12,16 @@ export default defineConfig(async () => {
       plugins: [
         ElementPlus({
           format: 'esm',
+        }),
+        Components({
+          resolvers: [ElementPlusResolver()],
+          dts: 'src/components.d.ts',
+        }),
+        // 自动导入 Element Plus 相关 API
+        AutoImport({
+          resolvers: [ElementPlusResolver()],
+          imports: ['vue', 'vue-router'],
+          dts: 'src/auto-imports.d.ts',
         }),
       ],
       server: {

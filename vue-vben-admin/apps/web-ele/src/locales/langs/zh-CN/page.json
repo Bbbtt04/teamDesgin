@@ -9,6 +9,12 @@
   "dashboard": {
     "title": "概览",
     "analytics": "分析页",
-    "workspace": "工作台"
+    "workspace": "工作台",
+    "farm": "分析页"
+  },
+  "field": {
+    "title": "大田管理",
+    "management": "大田列表",
+    "detail": "大田详情"
   }
 }

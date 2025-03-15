@@ -9,6 +9,12 @@
   "dashboard": {
     "title": "Dashboard",
     "analytics": "Analytics",
-    "workspace": "Workspace"
+    "workspace": "Workspace",
+    "farm": "Smart Agriculture"
+  },
+  "field": {
+    "title": "Field Management",
+    "management": "Field Management",
+    "detail": "Field Details"
   }
 }

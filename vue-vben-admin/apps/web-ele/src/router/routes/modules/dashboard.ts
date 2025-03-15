@@ -13,13 +13,12 @@ const routes: RouteRecordRaw[] = [
     path: '/dashboard',
     children: [
       {
-        name: 'Analytics',
-        path: '/analytics',
-        component: () => import('#/views/dashboard/analytics/index.vue'),
+        name: 'FarmDashboard',
+        path: '/farm-dashboard',
+        component: () => import('#/views/dashboard/farm/index.vue'),
         meta: {
-          affixTab: true,
-          icon: 'lucide:area-chart',
-          title: $t('page.dashboard.analytics'),
+          icon: 'lucide:sprout',
+          title: $t('page.dashboard.farm'),
         },
       },
       {

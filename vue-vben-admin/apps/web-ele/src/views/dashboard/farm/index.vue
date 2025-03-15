@@ -95,7 +95,7 @@ const chartTabs: TabOption[] = [
     </div>
 
     <!-- 快速导航 -->
-    <div class="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <!-- <div class="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
       <router-link to="/farm/management" class="rounded-lg bg-primary p-4 text-center text-white hover:bg-primary/90">
         农场管理
       </router-link>
@@ -108,6 +108,6 @@ const chartTabs: TabOption[] = [
       <router-link to="/warning/center" class="rounded-lg bg-primary p-4 text-center text-white hover:bg-primary/90">
         预警中心
       </router-link>
-    </div>
+    </div> -->
   </div>
 </template>
