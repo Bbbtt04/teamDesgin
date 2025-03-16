@@ -46,11 +46,13 @@
     "element-plus": "catalog:",
     "pinia": "catalog:",
     "vue": "catalog:",
-    "vue-router": "catalog:"
+    "vue-router": "catalog:",
+    "echarts": "^5.4.3"
   },
   "devDependencies": {
     "unplugin-auto-import": "^19.1.1",
     "unplugin-element-plus": "catalog:",
-    "unplugin-vue-components": "^28.4.1"
+    "unplugin-vue-components": "^28.4.1",
+    "@types/echarts": "^4.9.22"
   }
 }
