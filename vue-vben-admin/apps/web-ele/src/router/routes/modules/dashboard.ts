@@ -4,33 +4,24 @@ import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
+    name: 'FarmDashboard',
+    path: '/farm-dashboard',
+    component: () => import('#/views/dashboard/farm/index.vue'),
     meta: {
-      icon: 'lucide:layout-dashboard',
-      order: -1,
-      title: $t('page.dashboard.title'),
+      icon: 'lucide:sprout',
+      title: $t('page.dashboard.farm'),
+      order: 2,
     },
-    name: 'Dashboard',
-    path: '/dashboard',
-    children: [
-      {
-        name: 'FarmDashboard',
-        path: '/farm-dashboard',
-        component: () => import('#/views/dashboard/farm/index.vue'),
-        meta: {
-          icon: 'lucide:sprout',
-          title: $t('page.dashboard.farm'),
-        },
-      },
-      {
-        name: 'Workspace',
-        path: '/workspace',
-        component: () => import('#/views/dashboard/workspace/index.vue'),
-        meta: {
-          icon: 'carbon:workspace',
-          title: $t('page.dashboard.workspace'),
-        },
-      },
-    ],
+  },
+  {
+    name: 'Workspace',
+    path: '/workspace',
+    component: () => import('#/views/dashboard/workspace/index.vue'),
+    meta: {
+      icon: 'carbon:workspace',
+      title: $t('page.dashboard.workspace'),
+      order: 1,
+    },
   },
 ];
 

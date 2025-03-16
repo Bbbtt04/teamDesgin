@@ -10,9 +10,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import {
-  AnalysisChartCard,
   WorkbenchHeader,
-  WorkbenchProject,
   WorkbenchQuickNav,
   WorkbenchTodo,
   WorkbenchTrends,
@@ -21,196 +19,126 @@ import { preferences } from '@vben/preferences';
 import { useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
-import AnalyticsVisitsSource from '../analytics/analytics-visits-source.vue';
-
 const userStore = useUserStore();
 
 // 这是一个示例数据，实际项目中需要根据实际情况进行调整
 // url 也可以是内部路由，在 navTo 方法中识别处理，进行内部跳转
 // 例如：url: /dashboard/workspace
-const projectItems: WorkbenchProjectItem[] = [
-  {
-    color: '',
-    content: '不要等待机会，而要创造机会。',
-    date: '2021-04-01',
-    group: '开源组',
-    icon: 'carbon:logo-github',
-    title: 'Github',
-    url: 'https://github.com',
-  },
-  {
-    color: '#3fb27f',
-    content: '现在的你决定将来的你。',
-    date: '2021-04-01',
-    group: '算法组',
-    icon: 'ion:logo-vue',
-    title: 'Vue',
-    url: 'https://vuejs.org',
-  },
-  {
-    color: '#e18525',
-    content: '没有什么才能比努力更重要。',
-    date: '2021-04-01',
-    group: '上班摸鱼',
-    icon: 'ion:logo-html5',
-    title: 'Html5',
-    url: 'https://developer.mozilla.org/zh-CN/docs/Web/HTML',
-  },
-  {
-    color: '#bf0c2c',
-    content: '热情和欲望可以突破一切难关。',
-    date: '2021-04-01',
-    group: 'UI',
-    icon: 'ion:logo-angular',
-    title: 'Angular',
-    url: 'https://angular.io',
-  },
-  {
-    color: '#00d8ff',
-    content: '健康的身体是实现目标的基石。',
-    date: '2021-04-01',
-    group: '技术牛',
-    icon: 'bx:bxl-react',
-    title: 'React',
-    url: 'https://reactjs.org',
-  },
-  {
-    color: '#EBD94E',
-    content: '路是走出来的，而不是空想出来的。',
-    date: '2021-04-01',
-    group: '架构组',
-    icon: 'ion:logo-javascript',
-    title: 'Js',
-    url: 'https://developer.mozilla.org/zh-CN/docs/Web/JavaScript',
-  },
-];
 
 // 同样，这里的 url 也可以使用以 http 开头的外部链接
 const quickNavItems: WorkbenchQuickNavItem[] = [
   {
     color: '#1fdaca',
-    icon: 'ion:home-outline',
-    title: '首页',
-    url: '/',
-  },
-  {
-    color: '#bf0c2c',
-    icon: 'ion:grid-outline',
-    title: '仪表盘',
-    url: '/dashboard',
-  },
-  {
-    color: '#e18525',
-    icon: 'ion:layers-outline',
-    title: '组件',
-    url: '/demos/features/icons',
+    icon: 'ep:monitor',
+    title: '监控大屏',
+    url: '/monitor',
   },
   {
     color: '#3fb27f',
-    icon: 'ion:settings-outline',
-    title: '系统管理',
-    url: '/demos/features/login-expired', // 这里的 URL 是示例，实际项目中需要根据实际情况进行调整
+    icon: 'ep:cpu',
+    title: '设备管理',
+    url: '/equipment',
+  },
+  {
+    color: '#e18525',
+    icon: 'ep:map-location',
+    title: '农田管理',
+    url: '/farm',
   },
   {
     color: '#4daf1bc9',
-    icon: 'ion:key-outline',
-    title: '权限管理',
-    url: '/demos/access/page-control',
+    icon: 'ep:data-analysis',
+    title: '数据分析',
+    url: '/analysis',
+  },
+  {
+    color: '#bf0c2c',
+    icon: 'ep:warning',
+    title: '告警管理',
+    url: '/alert',
   },
   {
     color: '#00d8ff',
-    icon: 'ion:bar-chart-outline',
-    title: '图表',
-    url: '/analytics',
+    icon: 'ep:setting',
+    title: '系统设置',
+    url: '/setting',
   },
 ];
 
 const todoItems = ref<WorkbenchTodoItem[]>([
   {
     completed: false,
-    content: `审查最近提交到Git仓库的前端代码，确保代码质量和规范。`,
+    content: `检查1号田块土壤湿度传感器数据异常情况，可能需要设备维护。`,
     date: '2024-07-30 11:00:00',
-    title: '审查前端代码提交',
+    title: '设备异常检查',
   },
   {
     completed: true,
-    content: `检查并优化系统性能，降低CPU使用率。`,
+    content: `完成2号田块自动灌溉系统的季度维护工作。`,
     date: '2024-07-30 11:00:00',
-    title: '系统性能优化',
+    title: '设备维护',
   },
   {
     completed: false,
-    content: `进行系统安全检查，确保没有安全漏洞或未授权的访问。 `,
+    content: `查看3号田块温湿度数据，评估是否需要进行灌溉。`,
     date: '2024-07-30 11:00:00',
-    title: '安全检查',
+    title: '灌溉评估',
   },
   {
     completed: false,
-    content: `更新项目中的所有npm依赖包，确保使用最新版本。`,
+    content: `检查气象站预警信息，准备防雨防风措施。`,
     date: '2024-07-30 11:00:00',
-    title: '更新项目依赖',
+    title: '天气预警',
   },
   {
     completed: false,
-    content: `修复用户报告的页面UI显示问题，确保在不同浏览器中显示一致。 `,
+    content: `更新设备巡检记录，完成月度设备状态报告。`,
     date: '2024-07-30 11:00:00',
-    title: '修复UI显示问题',
+    title: '设备巡检',
   },
 ]);
 const trendItems: WorkbenchTrendItem[] = [
   {
     avatar: 'svg:avatar-1',
-    content: `在 <a>开源组</a> 创建了项目 <a>Vue</a>`,
+    content: `在 <a>1号田</a> 更换了 <a>土壤传感器</a>`,
     date: '刚刚',
-    title: '威廉',
+    title: '张工',
   },
   {
     avatar: 'svg:avatar-2',
-    content: `关注了 <a>威廉</a> `,
+    content: `完成了 <a>2号田</a> 的灌溉系统维护`,
     date: '1个小时前',
-    title: '艾文',
+    title: '李工',
   },
   {
     avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
+    content: `处理了 <a>3号田温度传感器</a> 告警`,
     date: '1天前',
-    title: '克里斯',
+    title: '王工',
   },
   {
     avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写一个Vite插件</a> `,
+    content: `更新了 <a>气象站</a> 固件`,
     date: '2天前',
-    title: 'Vben',
+    title: '赵工',
   },
   {
     avatar: 'svg:avatar-1',
-    content: `回复了 <a>杰克</a> 的问题 <a>如何进行项目优化？</a>`,
+    content: `完成了 <a>4号田</a> 的设备巡检`,
     date: '3天前',
-    title: '皮特',
+    title: '刘工',
   },
   {
     avatar: 'svg:avatar-2',
-    content: `关闭了问题 <a>如何运行项目</a> `,
+    content: `处理了 <a>自动灌溉系统</a> 故障`,
     date: '1周前',
-    title: '杰克',
+    title: '孙工',
   },
   {
     avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
+    content: `更新了 <a>设备维护手册</a>`,
     date: '1周前',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `推送了代码到 <a>Github</a>`,
-    date: '2021-04-01 20:00',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写使用 Admin Vben</a> `,
-    date: '2021-03-01 20:00',
-    title: 'Vben',
+    title: '技术部',
   },
 ];
 
@@ -239,15 +167,16 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
       :avatar="userStore.userInfo?.avatar || preferences.app.defaultAvatar"
     >
       <template #title>
-        早安, {{ userStore.userInfo?.realName }}, 开始您一天的工作吧！
+        您好, {{ userStore.userInfo?.realName }}, 欢迎使用智慧农业管理系统！
       </template>
-      <template #description> 今日晴，20℃ - 32℃！ </template>
+      <template #description>
+        今日天气：晴，温度：20℃ - 32℃，适合进行田间管理工作
+      </template>
     </WorkbenchHeader>
 
     <div class="mt-5 flex flex-col lg:flex-row">
       <div class="mr-4 w-full lg:w-3/5">
-        <WorkbenchProject :items="projectItems" title="项目" @click="navTo" />
-        <WorkbenchTrends :items="trendItems" class="mt-5" title="最新动态" />
+        <WorkbenchTrends :items="trendItems" class="mt-5" title="农场动态" />
       </div>
       <div class="w-full lg:w-2/5">
         <WorkbenchQuickNav
@@ -257,9 +186,9 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           @click="navTo"
         />
         <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" />
-        <AnalysisChartCard class="mt-5" title="访问来源">
+        <!-- <AnalysisChartCard class="mt-5" title="访问来源">
           <AnalyticsVisitsSource />
-        </AnalysisChartCard>
+        </AnalysisChartCard> -->
       </div>
     </div>
   </div>
