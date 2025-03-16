@@ -22,5 +22,11 @@
     "management": "活动管理",
     "detail": "活动详情",
     "statistics": "活动统计"
+  },
+  "equipment": {
+    "title": "农机设备",
+    "management": "设备管理",
+    "detail": "设备详情",
+    "statistics": "设备统计"
   }
 }
