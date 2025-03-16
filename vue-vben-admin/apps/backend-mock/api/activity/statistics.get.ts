@@ -54,11 +54,17 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const { fieldId, startDate, endDate } = query;
 
+    console.log('统计查询参数:', { fieldId, startDate, endDate });
+
     // 根据查询参数过滤活动列表
     let filteredActivities = [...activityList];
+    console.log('原始活动数量:', filteredActivities.length);
 
     if (fieldId) {
+      console.log('按字段ID过滤:', fieldId);
+      console.log('活动字段ID示例:', filteredActivities.slice(0, 5).map(a => a.fieldId));
       filteredActivities = filteredActivities.filter(activity => activity.fieldId === fieldId);
+      console.log('过滤后活动数量:', filteredActivities.length);
     }
 
     if (startDate && endDate) {
@@ -104,12 +110,16 @@ export default defineEventHandler(async (event) => {
       byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
     });
 
-    return useResponseSuccess({
+    // 返回数据
+    const result = {
+      totalCount: filteredActivities.length,
       byType,
       byStatus,
-      byMonth,
-      totalCount: filteredActivities.length
-    });
+      byMonth
+    };
+
+    console.log('返回统计结果:', result);
+    return useResponseSuccess(result);
   } catch (error) {
     console.error('获取农事活动统计出错:', error);
     return {

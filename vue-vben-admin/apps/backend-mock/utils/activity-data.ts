@@ -55,6 +55,28 @@ export const activityList = Array.from({ length: 50 }).map(() => {
   const status = faker.helpers.arrayElement(Object.values(ActivityStatus).filter(s => typeof s === 'number')) as ActivityStatus;
   const dataSource = faker.helpers.arrayElement(Object.values(DataSource).filter(d => typeof d === 'number')) as DataSource;
 
+  // 使用真实的字段ID
+  const fieldId = faker.helpers.arrayElement(['1', '2', '3', '4', '5']);
+
+  // 根据字段ID选择对应的分区ID
+  let sectionId;
+  switch(fieldId) {
+    case '1':
+      sectionId = faker.helpers.arrayElement(['101', '102', '103']);
+      break;
+    case '2':
+      sectionId = faker.helpers.arrayElement(['201', '202']);
+      break;
+    case '4':
+      sectionId = faker.helpers.arrayElement(['401', '402']);
+      break;
+    case '5':
+      sectionId = faker.helpers.arrayElement(['501']);
+      break;
+    default:
+      sectionId = undefined;
+  }
+
   // 创建时间（过去3个月内）
   const createTime = faker.date.recent({ days: 90 }).toISOString();
 
@@ -138,8 +160,8 @@ export const activityList = Array.from({ length: 50 }).map(() => {
 
   return {
     id,
-    fieldId: faker.string.uuid().slice(0, 8),
-    sectionId: faker.helpers.maybe(() => faker.string.uuid().slice(0, 8), { probability: 0.7 }),
+    fieldId,
+    sectionId,
     activityType,
     title,
     description: faker.lorem.paragraph(),

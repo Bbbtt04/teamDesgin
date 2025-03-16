@@ -16,5 +16,11 @@
     "title": "大田管理",
     "management": "大田列表",
     "detail": "大田详情"
+  },
+  "activity": {
+    "title": "农事活动",
+    "management": "活动管理",
+    "detail": "活动详情",
+    "statistics": "活动统计"
   }
 }
