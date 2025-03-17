@@ -1,12 +1,14 @@
 export interface UserInfo {
-  id: number;
+  id: string;
   password: string;
   realName: string;
   roles: string[];
+  status: number;
   username: string;
   homePath?: string;
   department?: string;
   phone?: string;
+  createTime?: string;
 }
 
 // 角色权限定义
@@ -37,43 +39,43 @@ export const ROLE_DESCRIPTIONS = {
 
 export const MOCK_USERS: UserInfo[] = [
   {
-    id: 1,
+    id: '1',
     username: 'admin',
     password: '123456',
     realName: '系统管理员',
     roles: [ROLES.SUPER_ADMIN],
     department: '信息技术部',
     phone: '13800138000',
-    // homePath: '/monitor',
+    status: 1
   },
   {
-    id: 2,
+    id: '2',
     username: 'farm_admin',
     password: '123456',
     realName: '张大田',
     roles: [ROLES.FARM_ADMIN],
-    department: '农田管理部',
     phone: '13800138001',
+    status: 1
     // homePath: '/monitor',
   },
   {
-    id: 3,
+    id: '3',
     username: 'tech',
     password: '123456',
     realName: '李工',
     roles: [ROLES.TECHNICIAN],
-    department: '设备维护部',
     phone: '13800138002',
+    status: 1
     // homePath: '/equipment',
   },
   {
-    id: 4,
+    id: '4',
     username: 'tech2',
     password: '123456',
     realName: '王工',
     roles: [ROLES.TECHNICIAN],
-    department: '设备维护部',
     phone: '13800138003',
+    status: 1
     // homePath: '/equipment',
   },
 ];

@@ -209,6 +209,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
+import type { FormInstance } from 'element-plus';
 import {
   createActivity,
   updateActivity,
@@ -218,6 +219,17 @@ import {
   ActivityStatus,
   DataSource,
 } from '#/api/activity';
+
+interface FieldOption {
+  label: string;
+  value: string;
+}
+
+interface UploadFile {
+  name: string;
+  url?: string;
+  raw?: File;
+}
 
 // 定义Props
 const props = defineProps({
@@ -235,15 +247,15 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel']);
 
 // 表单引用
-const formRef = ref(null);
+const formRef = ref<FormInstance>();
 const loading = ref(false);
 
 // 大田和分区选项
-const fieldOptions = ref([]);
-const sectionOptions = ref([]);
+const fieldOptions = ref<FieldOption[]>([]);
+const sectionOptions = ref<FieldOption[]>([]);
 
 // 文件列表
-const uploadFileList = ref([]);
+const uploadFileList = ref<UploadFile[]>([]);
 
 // 表单数据
 const formData = reactive({
@@ -326,7 +338,7 @@ onMounted(async () => {
 
   // 初始化上传文件列表
   if (formData.images && formData.images.length > 0) {
-    uploadFileList.value = formData.images.map((url, index) => ({
+    uploadFileList.value = formData.images.map((url: string, index: number) => ({
       name: `image_${index + 1}.jpg`,
       url,
     }));
@@ -346,7 +358,7 @@ watch(() => formData.status, (value) => {
 async function loadFields() {
   try {
     const result = await getFieldList();
-    fieldOptions.value = (result.items || []).map((item) => ({
+    fieldOptions.value = (result.items || []).map((item: any) => ({
       label: item.name,
       value: item.id,
     }));
@@ -357,7 +369,7 @@ async function loadFields() {
 }
 
 // 加载分区列表
-async function loadSections(fieldId) {
+async function loadSections(fieldId: string) {
   if (!fieldId) {
     sectionOptions.value = [];
     return;
@@ -365,7 +377,7 @@ async function loadSections(fieldId) {
 
   try {
     const sections = await getFieldSectionList(fieldId);
-    sectionOptions.value = (sections || []).map((item) => ({
+    sectionOptions.value = (sections || []).map((item: any) => ({
       label: item.name,
       value: item.id,
     }));
@@ -376,7 +388,7 @@ async function loadSections(fieldId) {
 }
 
 // 处理大田选择
-function handleFieldChange(value) {
+function handleFieldChange(value: string) {
   formData.sectionId = '';
   if (value) {
     loadSections(value);
@@ -386,7 +398,7 @@ function handleFieldChange(value) {
 }
 
 // 处理状态变化
-function handleStatusChange(value) {
+function handleStatusChange(value: ActivityStatus) {
   if (value === ActivityStatus.PLANNED) {
     formData.endTime = '';
     formData.weatherInfo = '';
@@ -395,11 +407,11 @@ function handleStatusChange(value) {
 }
 
 // 处理上传变化
-function handleUploadChange(file, fileList) {
+function handleUploadChange(file: UploadFile, fileList: UploadFile[]) {
   uploadFileList.value = fileList;
 
   // 更新表单数据中的图片列表
-  formData.images = fileList.map((file) => {
+  formData.images = fileList.map((file: UploadFile) => {
     if (file.url) {
       return file.url;
     } else if (file.raw) {
@@ -411,9 +423,9 @@ function handleUploadChange(file, fileList) {
 }
 
 // 处理移除文件
-function handleRemove(file, fileList) {
+function handleRemove(file: UploadFile, fileList: UploadFile[]) {
   uploadFileList.value = fileList;
-  formData.images = fileList.map((file) => file.url || URL.createObjectURL(file.raw)).filter(Boolean);
+  formData.images = fileList.map((file: UploadFile) => file.url || (file.raw ? URL.createObjectURL(file.raw) : '')).filter(Boolean);
 }
 
 // 取消

@@ -19,6 +19,15 @@ const routes: RouteRecordRaw[] = [
           icon: 'ep:user-filled',
         },
       },
+      {
+        path: '/system/user',
+        name: 'SystemUser',
+        component: () => import('#/views/system/user/index.vue'),
+        meta: {
+          title: '用户管理',
+          icon: 'ep:user',
+        },
+      },
     ],
   },
 ];
