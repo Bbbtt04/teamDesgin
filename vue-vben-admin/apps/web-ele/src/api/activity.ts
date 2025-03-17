@@ -142,6 +142,7 @@ export interface ActivityQueryParams {
   status?: ActivityStatus;
   startDate?: string;
   endDate?: string;
+  executor?: string;
 }
 
 /**

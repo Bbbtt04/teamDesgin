@@ -6,7 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  VbenCheckbox,
 } from '@vben-core/shadcn-ui';
 
 interface Props {
@@ -18,9 +17,13 @@ defineOptions({
   name: 'WorkbenchTodo',
 });
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   items: () => [],
 });
+
+const emit = defineEmits<{
+  (e: 'click', item: WorkbenchTodoItem): void;
+}>();
 </script>
 
 <template>
@@ -33,13 +36,10 @@ withDefaults(defineProps<Props>(), {
         <li
           v-for="item in items"
           :key="item.title"
-          :class="{
-            'select-none line-through opacity-60': item.completed,
-          }"
-          class="flex cursor-pointer justify-between gap-x-6 py-5"
+          class="flex cursor-pointer justify-between gap-x-6 py-5 "
+          @click="emit('click', item)"
         >
-          <div class="flex min-w-0 items-center gap-x-4">
-            <VbenCheckbox v-model:checked="item.completed" name="completed" />
+          <div class="flex min-w-0 items-center">
             <div class="min-w-0 flex-auto">
               <p class="text-foreground text-sm font-semibold leading-6">
                 {{ item.title }}
@@ -52,7 +52,7 @@ withDefaults(defineProps<Props>(), {
             </div>
           </div>
           <div class="hidden h-full shrink-0 sm:flex sm:flex-col sm:items-end">
-            <span class="text-foreground/80 mt-6 text-xs leading-6">
+            <span class="text-foreground/80 mt-1 text-xs leading-6">
               {{ item.date }}
             </span>
           </div>

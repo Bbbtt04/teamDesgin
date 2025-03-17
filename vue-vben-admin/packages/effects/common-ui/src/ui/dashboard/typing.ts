@@ -30,6 +30,7 @@ interface WorkbenchTodoItem {
   content: string;
   date: string;
   title: string;
+  id?: string;
 }
 
 interface WorkbenchQuickNavItem {

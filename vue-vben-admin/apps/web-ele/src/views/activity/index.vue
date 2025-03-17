@@ -413,7 +413,7 @@ function formatTime(time: string) {
         border
         style="width: 100%"
       >
-        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column type="index" label="序号" width="80" align="center" />
         <el-table-column prop="title" label="活动标题" width="180" />
         <el-table-column label="大田" width="120">
           <template #default="{ row }">

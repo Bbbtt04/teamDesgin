@@ -88,7 +88,19 @@
 
       <el-col :span="12">
         <el-form-item label="执行人" prop="executor">
-          <el-input v-model="formData.executor" placeholder="请输入执行人" />
+          <el-select
+            v-model="formData.executor"
+            placeholder="请选择执行人"
+            style="width: 100%"
+            filterable
+          >
+            <el-option
+              v-for="item in userOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
       </el-col>
       <el-col :span="12">
@@ -219,6 +231,7 @@ import {
   ActivityStatus,
   DataSource,
 } from '#/api/activity';
+import { getUserList } from '#/api/user';
 
 interface FieldOption {
   label: string;
@@ -256,6 +269,9 @@ const sectionOptions = ref<FieldOption[]>([]);
 
 // 文件列表
 const uploadFileList = ref<UploadFile[]>([]);
+
+// 用户选项
+const userOptions = ref<{ label: string; value: string }[]>([]);
 
 // 表单数据
 const formData = reactive({
@@ -328,9 +344,25 @@ const rules = {
   dataSource: [{ required: true, message: '请选择数据来源', trigger: 'change' }],
 };
 
+// 加载用户列表
+async function loadUsers() {
+  try {
+    const data  = await getUserList({
+      status: 1, // 只获取启用状态的用户
+    });
+    userOptions.value = (data.items || []).map((user: { realName: any; username: any }) => ({
+      label: `${user.realName}（${user.username}）`,
+      value: `${user.realName}`,
+    }));
+  } catch (error) {
+    console.error('加载用户列表失败', error);
+    ElMessage.error('加载用户列表失败');
+  }
+}
+
 // 初始化
 onMounted(async () => {
-  await loadFields();
+  await Promise.all([loadFields(), loadUsers()]);
 
   if (formData.fieldId) {
     await loadSections(formData.fieldId);
@@ -442,10 +474,11 @@ async function handleSubmit() {
 
     loading.value = true;
 
+    let activityResult;
     if (props.isEdit) {
-      await updateActivity(formData.id, formData);
+      activityResult = await updateActivity(formData.id, formData);
     } else {
-      await createActivity(formData);
+      activityResult = await createActivity(formData);
     }
 
     ElMessage.success(props.isEdit ? '编辑成功' : '新增成功');

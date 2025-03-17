@@ -6,7 +6,7 @@ import type {
   WorkbenchTrendItem,
 } from '@vben/common-ui';
 
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 import {
@@ -18,8 +18,11 @@ import {
 import { preferences } from '@vben/preferences';
 import { useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
+import { getActivityList, ActivityStatus } from '#/api/activity';
+import { formatDateTime } from '#/utils/formatTime';
 
 const userStore = useUserStore();
+const router = useRouter();
 
 const quickNavItems: WorkbenchQuickNavItem[] = [
   {
@@ -60,38 +63,61 @@ const quickNavItems: WorkbenchQuickNavItem[] = [
   },
 ];
 
-const todoItems = ref<WorkbenchTodoItem[]>([
-  {
-    completed: false,
-    content: `检查1号田块土壤湿度传感器数据异常情况，可能需要设备维护。`,
-    date: '2024-07-30 11:00:00',
-    title: '设备异常检查',
-  },
-  {
-    completed: true,
-    content: `完成2号田块自动灌溉系统的季度维护工作。`,
-    date: '2024-07-30 11:00:00',
-    title: '设备维护',
-  },
-  {
-    completed: false,
-    content: `查看3号田块温湿度数据，评估是否需要进行灌溉。`,
-    date: '2024-07-30 11:00:00',
-    title: '灌溉评估',
-  },
-  {
-    completed: false,
-    content: `检查气象站预警信息，准备防雨防风措施。`,
-    date: '2024-07-30 11:00:00',
-    title: '天气预警',
-  },
-  {
-    completed: false,
-    content: `更新设备巡检记录，完成月度设备状态报告。`,
-    date: '2024-07-30 11:00:00',
-    title: '设备巡检',
-  },
-]);
+// 待办事项数据
+const todoItems = ref<WorkbenchTodoItem[]>([]);
+
+// 加载待办事项数据
+async function loadTodoItems() {
+  try {
+    const { items = [] } = await getActivityList({
+      executor: userStore.userInfo?.realName,
+      status: ActivityStatus.INPROGRESS, // 获取进行中的活动
+      pageSize: 5, // 只获取前5条
+    });
+
+    todoItems.value = items.map((item: any) => ({
+      title: `${item.title} [${getActivityTypeName(item.activityType)}]`,
+      content: `
+        <div class="flex flex-col gap-1">
+          <span>${item.description || '暂无描述'}</span>
+          <span class="text-primary">所属田块：${item.fieldName || '未知田块'}</span>
+        </div>
+      `,
+      date: `开始时间：${formatDateTime(item.startTime)}`,
+      completed: item.status === ActivityStatus.COMPLETED,
+      id: item.id,
+    }));
+  } catch (error) {
+    console.error('加载待办事项失败', error);
+  }
+}
+
+// 获取活动类型名称
+function getActivityTypeName(type: number): string {
+  const typeMap: Record<number, string> = {
+    0: '播种',
+    1: '施肥',
+    2: '灌溉',
+    3: '除草',
+    4: '病虫害防治',
+    5: '收获',
+    99: '其他'
+  };
+  return typeMap[type] || '未知';
+}
+
+// 处理待办事项点击
+function handleTodoClick(item: WorkbenchTodoItem) {
+  if (item.id) {
+    router.push(`/activity/detail/${item.id}`);
+  }
+}
+
+// 初始化
+onMounted(async () => {
+  await loadTodoItems();
+});
+
 const trendItems: WorkbenchTrendItem[] = [
   {
     avatar: 'svg:avatar-1',
@@ -137,8 +163,6 @@ const trendItems: WorkbenchTrendItem[] = [
   },
 ];
 
-const router = useRouter();
-
 // 这是一个示例方法，实际项目中需要根据实际情况进行调整
 // This is a sample method, adjust according to the actual project requirements
 function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
@@ -180,7 +204,7 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           title="快捷导航"
           @click="navTo"
         />
-        <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" />
+        <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" @click="handleTodoClick" />
         <!-- <AnalysisChartCard class="mt-5" title="访问来源">
           <AnalyticsVisitsSource />
         </AnalysisChartCard> -->
