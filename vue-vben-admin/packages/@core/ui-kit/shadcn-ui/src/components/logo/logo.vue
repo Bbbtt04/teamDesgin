@@ -59,7 +59,7 @@ withDefaults(defineProps<Props>(), {
         v-if="!collapsed"
         class="text-foreground truncate text-nowrap font-semibold"
       >
-        {{ text }}
+        大田智能化系统
       </span>
     </a>
   </div>

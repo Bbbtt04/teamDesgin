@@ -5,31 +5,76 @@ export interface UserInfo {
   roles: string[];
   username: string;
   homePath?: string;
+  department?: string;
+  phone?: string;
 }
+
+// 角色权限定义
+export const ROLES = {
+  SUPER_ADMIN: 'super_admin',    // 系统管理员
+  FARM_ADMIN: 'farm_admin',      // 大田管理员
+  TECHNICIAN: 'technician',      // 技术员
+} as const;
+
+// 角色描述
+export const ROLE_DESCRIPTIONS = {
+  [ROLES.SUPER_ADMIN]: {
+    name: '系统管理员',
+    description: '系统最高权限，可以管理所有功能和配置',
+    permissions: ['system', 'user', 'role', 'monitor', 'equipment', 'farm', 'alert', 'analysis'],
+  },
+  [ROLES.FARM_ADMIN]: {
+    name: '大田管理员',
+    description: '负责农田和设备的日常管理和监控',
+    permissions: ['monitor', 'equipment', 'farm', 'alert', 'analysis'],
+  },
+  [ROLES.TECHNICIAN]: {
+    name: '技术员',
+    description: '负责设备维护和故障处理',
+    permissions: ['equipment', 'alert'],
+  },
+} as const;
 
 export const MOCK_USERS: UserInfo[] = [
   {
-    id: 0,
-    password: '123456',
-    realName: 'Vben',
-    roles: ['super'],
-    username: 'vben',
-  },
-  {
     id: 1,
-    password: '123456',
-    realName: 'Admin',
-    roles: ['admin'],
     username: 'admin',
-    homePath: '/workspace',
+    password: '123456',
+    realName: '系统管理员',
+    roles: [ROLES.SUPER_ADMIN],
+    department: '信息技术部',
+    phone: '13800138000',
+    // homePath: '/monitor',
   },
   {
     id: 2,
+    username: 'farm_admin',
     password: '123456',
-    realName: 'Jack',
-    roles: ['user'],
-    username: 'jack',
-    homePath: '/analytics',
+    realName: '张大田',
+    roles: [ROLES.FARM_ADMIN],
+    department: '农田管理部',
+    phone: '13800138001',
+    // homePath: '/monitor',
+  },
+  {
+    id: 3,
+    username: 'tech',
+    password: '123456',
+    realName: '李工',
+    roles: [ROLES.TECHNICIAN],
+    department: '设备维护部',
+    phone: '13800138002',
+    // homePath: '/equipment',
+  },
+  {
+    id: 4,
+    username: 'tech2',
+    password: '123456',
+    realName: '王工',
+    roles: [ROLES.TECHNICIAN],
+    department: '设备维护部',
+    phone: '13800138003',
+    // homePath: '/equipment',
   },
 ];
 

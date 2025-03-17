@@ -15,16 +15,16 @@ const authStore = useAuthStore();
 
 const MOCK_USER_OPTIONS: BasicOption[] = [
   {
-    label: 'Super',
-    value: 'vben',
-  },
-  {
-    label: 'Admin',
+    label: '系统管理员',
     value: 'admin',
   },
   {
-    label: 'User',
-    value: 'jack',
+    label: '大田管理员',
+    value: 'farm_admin',
+  },
+  {
+    label: '设备技术员',
+    value: 'tech',
   },
 ];
 
@@ -42,7 +42,7 @@ const formSchema = computed((): VbenFormSchema[] => {
         .string()
         .min(1, { message: $t('authentication.selectAccount') })
         .optional()
-        .default('vben'),
+        .default('admin'),
     },
     {
       component: 'VbenInput',
