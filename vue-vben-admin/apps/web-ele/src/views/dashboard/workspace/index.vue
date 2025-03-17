@@ -21,11 +21,6 @@ import { openWindow } from '@vben/utils';
 
 const userStore = useUserStore();
 
-// 这是一个示例数据，实际项目中需要根据实际情况进行调整
-// url 也可以是内部路由，在 navTo 方法中识别处理，进行内部跳转
-// 例如：url: /dashboard/workspace
-
-// 同样，这里的 url 也可以使用以 http 开头的外部链接
 const quickNavItems: WorkbenchQuickNavItem[] = [
   {
     color: '#1fdaca',
@@ -43,13 +38,13 @@ const quickNavItems: WorkbenchQuickNavItem[] = [
     color: '#e18525',
     icon: 'ep:map-location',
     title: '农田管理',
-    url: '/farm',
+    url: '/field',
   },
   {
     color: '#4daf1bc9',
     icon: 'ep:data-analysis',
     title: '数据分析',
-    url: '/analysis',
+    url: '/farm-dashboard',
   },
   {
     color: '#bf0c2c',
@@ -61,7 +56,7 @@ const quickNavItems: WorkbenchQuickNavItem[] = [
     color: '#00d8ff',
     icon: 'ep:setting',
     title: '系统设置',
-    url: '/setting',
+    url: '/system',
   },
 ];
 

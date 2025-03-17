@@ -16,5 +16,11 @@
     "title": "Field Management",
     "management": "Field Management",
     "detail": "Field Details"
+  },
+  "alert": {
+    "title": "Alert",
+    "management": "Alert Management",
+    "history": "Alert History",
+    "settings": "Alert Settings"
   }
 }

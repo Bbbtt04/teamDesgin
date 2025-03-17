@@ -28,5 +28,11 @@
     "management": "设备管理",
     "detail": "设备详情",
     "statistics": "设备统计"
+  },
+  "alert": {
+    "title": "告警管理",
+    "management": "告警管理",
+    "history": "告警历史",
+    "settings": "告警设置"
   }
 }
