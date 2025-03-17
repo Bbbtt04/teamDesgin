@@ -40,6 +40,7 @@ export enum EquipmentStatus {
  * 设备信息接口
  */
 export interface Equipment {
+  lastMaintenanceTime: any;
   id: string;
   name: string;
   type: EquipmentType;

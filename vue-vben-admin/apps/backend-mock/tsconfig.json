@@ -1,3 +1,12 @@
 {
-  "extends": "./.nitro/types/tsconfig.json"
+  "extends": "./.nitro/types/tsconfig.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
+  "compilerOptions": {
+    "esModuleInterop": true
+  }
 }

@@ -50,10 +50,10 @@ const quickNavItems: WorkbenchQuickNavItem[] = [
     url: '/farm-dashboard',
   },
   {
-    color: '#bf0c2c',
-    icon: 'ep:warning',
-    title: '告警管理',
-    url: '/alert',
+    color: '#ff9900',
+    icon: 'ep:calendar',
+    title: '农事活动',
+    url: '/activity',
   },
   {
     color: '#00d8ff',
