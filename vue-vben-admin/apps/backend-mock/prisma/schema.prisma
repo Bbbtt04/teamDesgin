@@ -157,3 +157,24 @@ model FarmTrend {
   field       Field?     @relation(fields: [fieldId], references: [id], onDelete: SetNull)
   equipment   Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
 }
+
+// 操作日志
+model OperationLog {
+  id            String   @id @default(uuid())
+  username      String // 操作用户
+  operationType String // 操作类型
+  module        String // 模块名称
+  description   String // 操作描述
+  requestUrl    String // 请求URL
+  requestMethod String // 请求方法
+  requestParams String   @db.Text // 请求参数
+  responseData  String   @db.Text // 响应数据
+  status        String // 操作状态
+  errorMessage  String?  @db.Text // 错误信息
+  ip            String // IP地址
+  browser       String // 浏览器
+  os            String // 操作系统
+  createTime    DateTime @default(now()) // 创建时间
+
+  @@map("operation_logs")
+}

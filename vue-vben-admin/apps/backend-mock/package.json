@@ -13,10 +13,14 @@
   "dependencies": {
     "@faker-js/faker": "catalog:",
     "@prisma/client": "^6.5.0",
+    "add": "^2.0.6",
     "jsonwebtoken": "catalog:",
     "mysql2": "^3.13.0",
     "nitropack": "catalog:",
-    "prisma": "^6.5.0"
+    "pnpm": "^10.6.4",
+    "prisma": "^6.5.0",
+    "ua-parser-js": "^2.0.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "catalog:",

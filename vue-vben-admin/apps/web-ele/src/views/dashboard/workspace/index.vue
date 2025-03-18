@@ -80,7 +80,6 @@ async function loadTodoItems() {
       content: `
         <div class="flex flex-col gap-1">
           <span>${item.description || '暂无描述'}</span>
-          <span class="text-primary">所属田块：${item.fieldName || '未知田块'}</span>
         </div>
       `,
       date: `开始时间：${formatDateTime(item.startTime)}`,
@@ -205,9 +204,6 @@ function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
           @click="navTo"
         />
         <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" @click="handleTodoClick" />
-        <!-- <AnalysisChartCard class="mt-5" title="访问来源">
-          <AnalyticsVisitsSource />
-        </AnalysisChartCard> -->
       </div>
     </div>
   </div>
