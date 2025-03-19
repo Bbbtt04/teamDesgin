@@ -1,8 +1,8 @@
-import { defineEventHandler, readBody } from 'h3';
+import { defineEventHandler, getQuery } from 'h3';
 import { prisma } from '~/modules/db';
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
+  const query = getQuery(event);
   const {
     page = 1,
     pageSize = 10,
@@ -12,11 +12,11 @@ export default defineEventHandler(async (event) => {
     startTime,
     endTime,
     module,
-  } = body;
+  } = query;
 
   const where: any = {};
   if (username) {
-    where.username = { contains: username };
+    where.username = { contains: username as string };
   }
   if (operationType) {
     where.operationType = operationType;
@@ -25,12 +25,12 @@ export default defineEventHandler(async (event) => {
     where.status = status;
   }
   if (module) {
-    where.module = { contains: module };
+    where.module = { contains: module as string };
   }
   if (startTime && endTime) {
     where.createTime = {
-      gte: new Date(startTime),
-      lte: new Date(endTime),
+      gte: new Date(startTime as string),
+      lte: new Date(endTime as string),
     };
   }
 
@@ -38,11 +38,11 @@ export default defineEventHandler(async (event) => {
     prisma.operationLog.count({ where }),
     prisma.operationLog.findMany({
       where,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
+      skip: (Number(page) - 1) * Number(pageSize),
+      take: Number(pageSize),
       orderBy: { createTime: 'desc' },
     }),
   ]);
 
   return { items, total };
-});
+}); 
