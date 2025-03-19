@@ -629,76 +629,104 @@ async function main() {
   }
 
   // 7. 创建农场动态数据
-  console.log('创建农场动态数据...')
+  // 8. 创建告警数据
+  console.log('创建告警数据...')
 
-  const trendData = [
+  const alerts = [
     {
       id: '1',
-      avatar: 'svg:avatar-1',
-      title: '张工',
-      content: `在 <a>1号田</a> 更换了 <a>土壤传感器</a>`,
-      date: new Date(),
-      fieldId: '1'
+      title: '土壤湿度异常',
+      content: '1号田-A区土壤湿度低于阈值，建议及时灌溉',
+      type: 1, // 设备告警
+      level: 1, // 重要
+      status: 0, // 未处理
+      source: 1, // 设备上报
+      fieldId: '1',
+      sectionId: '101',
+      equipmentId: '1',
+      assigneeId: '2' // 指派给张大田
     },
     {
       id: '2',
-      avatar: 'svg:avatar-2',
-      title: '李工',
-      content: `完成了 <a>2号田</a> 的灌溉系统维护`,
-      date: subDays(new Date(), 1),
-      fieldId: '2'
+      title: '设备离线',
+      content: '土壤温度传感器-01离线，请检查设备',
+      type: 2, // 系统告警
+      level: 2, // 紧急
+      status: 1, // 已处理
+      source: 0, // 系统检测
+      fieldId: '1',
+      sectionId: '101',
+      equipmentId: '2',
+      assigneeId: '3' // 指派给李工
     },
     {
       id: '3',
-      avatar: 'svg:avatar-3',
-      title: '王工',
-      content: `处理了 <a>3号田温度传感器</a> 告警`,
-      date: subDays(new Date(), 2),
-      fieldId: '3'
+      title: '灌溉系统故障',
+      content: '自动灌溉系统-01工作异常，需要维修',
+      type: 1, // 设备告警
+      level: 2, // 紧急
+      status: 1, // 已处理
+      source: 1, // 设备上报
+      fieldId: '1',
+      sectionId: '101',
+      equipmentId: '3',
+      assigneeId: '3' // 指派给李工
     },
     {
       id: '4',
-      avatar: 'svg:avatar-4',
-      title: '赵工',
-      content: `更新了 <a>气象站</a> 固件`,
-      date: subDays(new Date(), 3),
-      equipmentId: '4'
+      title: '气象站数据异常',
+      content: '气象站-01数据上报异常，请检查网络连接',
+      type: 2, // 系统告警
+      level: 1, // 重要
+      status: 2, // 已忽略
+      source: 0, // 系统检测
+      fieldId: '2',
+      sectionId: null,
+      equipmentId: '4',
+      assigneeId: '3' // 指派给李工
     },
     {
       id: '5',
-      avatar: 'svg:avatar-1',
-      title: '刘工',
-      content: `完成了 <a>4号田</a> 的设备巡检`,
-      date: subDays(new Date(), 4),
-      fieldId: '4'
-    },
-    {
-      id: '6',
-      avatar: 'svg:avatar-2',
-      title: '孙工',
-      content: `处理了 <a>自动灌溉系统</a> 故障`,
-      date: subDays(new Date(), 7),
-      equipmentId: '3'
-    },
-    {
-      id: '7',
-      avatar: 'svg:avatar-3',
-      title: '技术部',
-      content: `更新了 <a>设备维护手册</a>`,
-      date: subDays(new Date(), 8)
+      title: '摄像头离线',
+      content: '农田监控摄像头-01离线，请检查设备',
+      type: 1, // 设备告警
+      level: 0, // 一般
+      status: 0, // 未处理
+      source: 1, // 设备上报
+      fieldId: '1',
+      sectionId: null,
+      equipmentId: '5',
+      assigneeId: '3' // 指派给李工
     }
   ]
 
-  for (const trend of trendData) {
-    await prisma.farmTrend.create({
-      data: {
-        id: trend.id,
-        avatar: trend.avatar,
-        title: trend.title,
-        content: trend.content,
-        date: trend.date,
-        fieldId: trend.fieldId,
-        equipmentId: trend.equipmentId
+  for (const alert of alerts) {
+    await prisma.alert.upsert({
+      where: { id: alert.id },
+      update: {
+        title: alert.title,
+        content: alert.content,
+        type: alert.type,
+        level: alert.level,
+        status: alert.status,
+        source: alert.source,
+        fieldId: alert.fieldId,
+        sectionId: alert.sectionId,
+        equipmentId: alert.equipmentId,
+        assigneeId: alert.assigneeId
+      },
+      create: {
+        id: alert.id,
+        title: alert.title,
+        content: alert.content,
+        type: alert.type,
+        level: alert.level,
+        status: alert.status,
+        source: alert.source,
+        fieldId: alert.fieldId,
+        sectionId: alert.sectionId,
+        equipmentId: alert.equipmentId,
+        assigneeId: alert.assigneeId
       }
     })
   }

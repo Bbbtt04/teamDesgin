@@ -5,11 +5,13 @@ import {
   getAlertList,
   processAlert,
   ignoreAlert as ignoreAlertApi,
+  assignAlert as assignAlertApi,
   type AlertInfo,
   type AlertQueryParams,
   AlertStatus,
   AlertLevel,
 } from '#/api/alert';
+import { getUserList,   type UserInfo } from '#/api/user';
 import CreateAlert from './components/CreateAlert.vue';
 
 // 表格数据
@@ -26,6 +28,7 @@ const searchForm = reactive<AlertQueryParams>({
   keyword: '',
   status: -1,
   level: -1,
+  assigneeId: '',
   dateRange: [],
 });
 
@@ -45,6 +48,12 @@ const levelOptions = [
   { label: '紧急', value: 2 },
 ];
 
+// 用户列表
+const userList = ref<UserInfo[]>([]);
+const assignDialogVisible = ref(false);
+const currentAlertId = ref('');
+const selectedAssigneeId = ref('');
+
 // 创建告警对话框
 const createAlertVisible = ref(false);
 
@@ -58,6 +67,7 @@ async function fetchAlertList() {
       keyword: searchForm.keyword,
       status: searchForm.status === -1 ? undefined : (searchForm.status as AlertStatus),
       level: searchForm.level === -1 ? undefined : (searchForm.level as AlertLevel),
+      assigneeId: searchForm.assigneeId || undefined,
     };
 
     if (searchForm.dateRange?.length === 2) {
@@ -87,8 +97,49 @@ function resetSearch() {
   searchForm.keyword = '';
   searchForm.status = -1;
   searchForm.level = -1;
+  searchForm.assigneeId = '';
   searchForm.dateRange = [];
   handleSearch();
+}
+
+// 获取用户列表
+async function fetchUserList() {
+  try {
+    const res = await getUserList();
+    userList.value = res.items;
+  } catch (error) {
+    console.error('获取用户列表失败', error);
+    ElMessage.error('获取用户列表失败');
+  }
+}
+
+// 打开指派对话框
+function openAssignDialog(id: string) {
+  currentAlertId.value = id;
+  selectedAssigneeId.value = '';
+  fetchUserList();
+  assignDialogVisible.value = true;
+}
+
+// 指派告警
+async function assignAlert() {
+  if (!selectedAssigneeId.value) {
+    ElMessage.warning('请选择指派人');
+    return;
+  }
+
+  try {
+    await assignAlertApi({
+      id: currentAlertId.value,
+      assigneeId: selectedAssigneeId.value,
+    });
+    ElMessage.success('指派成功');
+    assignDialogVisible.value = false;
+    fetchAlertList();
+  } catch (error) {
+    console.error('指派告警失败', error);
+    ElMessage.error('指派告警失败');
+  }
 }
 
 // 处理告警
@@ -177,6 +228,7 @@ function handleCreateSuccess() {
 
 onMounted(() => {
   fetchAlertList();
+  fetchUserList();
 });
 </script>
 
@@ -188,7 +240,7 @@ onMounted(() => {
         <el-form-item label="关键词">
           <el-input
             v-model="searchForm.keyword"
-            placeholder="告警内容/设备名称"
+            placeholder="告警内容/设备名称/指派人"
             clearable
           />
         </el-form-item>
@@ -217,6 +269,21 @@ onMounted(() => {
               :key="item.value"
               :label="item.label"
               :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="指派人">
+          <el-select
+            v-model="searchForm.assigneeId"
+            placeholder="全部"
+            clearable
+            class="!w-[180px]"
+          >
+            <el-option
+              v-for="user in userList"
+              :key="user.id"
+              :label="user.realName"
+              :value="user.id"
             />
           </el-select>
         </el-form-item>
@@ -253,14 +320,30 @@ onMounted(() => {
         style="width: 100%"
       >
         <el-table-column type="index" width="50" label="序号" />
+        <el-table-column prop="title" label="告警标题" min-width="120" show-overflow-tooltip />
         <el-table-column prop="content" label="告警内容" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="deviceName" label="设备名称" min-width="120" />
-        <el-table-column prop="assignee" label="指派人" width="120">
+        <el-table-column label="设备名称" min-width="120">
           <template #default="scope">
-            <div class="flex items-center">
-              <el-avatar :size="24" class="mr-2">{{ scope.row.assignee?.charAt(0) }}</el-avatar>
-              <span>{{ scope.row.assignee }}</span>
+            {{ scope.row.equipment?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="大田" width="120">
+          <template #default="scope">
+            {{ scope.row.field?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="分区" width="120">
+          <template #default="scope">
+            {{ scope.row.section?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="指派人" width="120">
+          <template #default="scope">
+            <div v-if="scope.row.assignee" class="flex items-center">
+              <el-avatar :size="24" class="mr-2">{{ scope.row.assignee.realName?.charAt(0) || '?' }}</el-avatar>
+              <span>{{ scope.row.assignee.realName }}</span>
             </div>
+            <span v-else class="text-gray">未指派</span>
           </template>
         </el-table-column>
         <el-table-column prop="level" label="告警级别" width="100">
@@ -282,17 +365,17 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="告警时间" width="160">
+        <el-table-column label="告警时间" width="160">
           <template #default="scope">
-            {{ scope.row.createTime ? new Date(scope.row.createTime).toLocaleString() : '' }}
+            {{ scope.row.createdAt ? new Date(scope.row.createdAt).toLocaleString() : '' }}
           </template>
         </el-table-column>
-        <el-table-column prop="handleTime" label="处理时间" width="160">
+        <el-table-column label="更新时间" width="160">
           <template #default="scope">
-            {{ scope.row.handleTime ? new Date(scope.row.handleTime).toLocaleString() : '-' }}
+            {{ scope.row.updatedAt ? new Date(scope.row.updatedAt).toLocaleString() : '-' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
             <template v-if="scope.row.status === AlertStatus.PENDING">
               <el-button
@@ -301,6 +384,13 @@ onMounted(() => {
                 @click="handleAlert(scope.row.id)"
               >
                 处理
+              </el-button>
+              <el-button
+                type="warning"
+                link
+                @click="openAssignDialog(scope.row.id)"
+              >
+                指派
               </el-button>
               <el-button
                 type="info"
@@ -337,6 +427,38 @@ onMounted(() => {
       v-model:visible="createAlertVisible"
       @success="handleCreateSuccess"
     />
+
+    <!-- 指派告警对话框 -->
+    <el-dialog
+      v-model="assignDialogVisible"
+      title="指派告警"
+      width="500px"
+    >
+      <el-form>
+        <el-form-item label="指派给" required>
+          <el-select v-model="selectedAssigneeId" placeholder="请选择指派人" style="width: 100%">
+            <el-option
+              v-for="user in userList"
+              :key="user.id"
+              :label="user.realName"
+              :value="user.id"
+            >
+              <div class="flex items-center">
+                <el-avatar :size="24" class="mr-2">{{ user.realName.charAt(0) }}</el-avatar>
+                <span>{{ user.realName }}</span>
+                <span class="text-gray ml-2">({{ user.department }})</span>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="assignDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="assignAlert">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -389,5 +511,9 @@ onMounted(() => {
 
 .mr-2 {
   margin-right: 8px;
+}
+
+.ml-2 {
+  margin-left: 8px;
 }
 </style>

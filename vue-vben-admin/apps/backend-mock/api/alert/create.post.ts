@@ -1,39 +1,78 @@
-import { defineEventHandler } from 'h3';
-import { useResponseSuccess } from '../../utils/response';
+import { defineEventHandler, readBody } from 'h3';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
+    const {
+      title,
+      content,
+      type,
+      level,
+      status,
+      source,
+      fieldId,
+      sectionId,
+      equipmentId,
+    } = body;
 
-    // 检查必要字段
-    if (!body.deviceName || body.level === undefined || !body.content || !body.assignee) {
-      return {
-        code: 400,
-        data: null,
-        message: '请提供完整的告警信息（设备名称、告警级别、告警内容、指派人是必填项）',
-      };
+    // 验证必填参数
+    if (!title) {
+      return useResponseError('告警标题不能为空');
     }
 
-    // 创建新的告警
-    const newAlert = {
-      id: crypto.randomUUID(),
-      deviceName: body.deviceName,
-      level: body.level,
-      content: body.content,
-      assignee: body.assignee,
-      status: 0, // 初始状态为未处理
-      createTime: new Date().toISOString(),
-      handleTime: null,
-    };
+    // 检查关联数据是否存在
+    if (fieldId) {
+      const field = await prisma.field.findUnique({
+        where: { id: fieldId },
+      });
+      if (!field) {
+        return useResponseError('大田不存在');
+      }
+    }
 
-    return useResponseSuccess(newAlert);
-  } catch (error) {
-    console.error('创建告警出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '创建告警失败',
-    };
+    if (sectionId) {
+      const section = await prisma.fieldSection.findUnique({
+        where: { id: sectionId },
+      });
+      if (!section) {
+        return useResponseError('分区不存在');
+      }
+    }
+
+    if (equipmentId) {
+      const equipment = await prisma.equipment.findUnique({
+        where: { id: equipmentId },
+      });
+      if (!equipment) {
+        return useResponseError('设备不存在');
+      }
+    }
+
+    // 创建告警
+    const alert = await prisma.alert.create({
+      data: {
+        title,
+        content,
+        type: isNaN(Number(type)) ? undefined : Number(type),
+        level: isNaN(Number(level)) ? undefined : Number(level),
+        status: isNaN(Number(status)) ? 0 : Number(status), // 默认值为0
+        source: isNaN(Number(source)) ? undefined : Number(source),
+        fieldId: fieldId || null,
+        sectionId: sectionId || null,
+        equipmentId: equipmentId || null,
+      },
+      include: {
+        field: true,
+        section: true,
+        equipment: true,
+      },
+    });
+
+    return useResponseSuccess(alert);
+  } catch (error: any) {
+    console.error('创建告警失败:', error);
+    return useResponseError(error.message || '创建告警失败');
   }
 });

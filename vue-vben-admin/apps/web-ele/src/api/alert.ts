@@ -47,6 +47,7 @@ export interface AlertQueryParams {
   startTime?: string;
   endTime?: string;
   dateRange?: string[];
+  assigneeId?: string;
 }
 
 /**
@@ -54,13 +55,35 @@ export interface AlertQueryParams {
  */
 export interface AlertInfo {
   id: string;
+  title: string;
   content: string;
-  deviceName: string;
   level: AlertLevel;
   status: AlertStatus;
-  createTime: string;
-  handleTime?: string;
-  assignee: string;
+  type: number;
+  source: number;
+  fieldId?: string;
+  sectionId?: string;
+  equipmentId?: string;
+  assigneeId?: string;
+  assignee?: {
+    id: string;
+    realName: string;
+    department?: string;
+  };
+  field?: {
+    id: string;
+    name: string;
+  };
+  section?: {
+    id: string;
+    name: string;
+  };
+  equipment?: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -91,6 +114,15 @@ export function ignoreAlert(id: string) {
 }
 
 /**
+ * 指派告警
+ * @param data 指派参数
+ * @returns 指派结果
+ */
+export function assignAlert(data: { id: string; assigneeId: string }) {
+  return requestClient.post(`${apiPrefix}/assign`, data);
+}
+
+/**
  * 告警统计数据接口
  */
 export interface AlertStatistics {
@@ -118,10 +150,15 @@ export function getAlertStatistics(params?: {
  * 创建告警参数接口
  */
 export interface CreateAlertParams {
+  title: string;
   content: string;
-  deviceName: string;
   level: AlertLevel;
-  assignee: string;
+  type: number;
+  source: number;
+  fieldId?: string;
+  sectionId?: string;
+  equipmentId?: string;
+  assigneeId?: string;
 }
 
 /**
