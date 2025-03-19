@@ -6,10 +6,11 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const {
+      id,
       fieldId,
       sectionId,
-      activityType,
       title,
+      activityType,
       description,
       startTime,
       endTime,
@@ -22,6 +23,14 @@ export default defineEventHandler(async (event) => {
       images,
       remark,
     } = body;
+
+    // 检查活动是否存在
+    const existingActivity = await prisma.activity.findUnique({
+      where: { id },
+    });
+    if (!existingActivity) {
+      return useResponseError('活动不存在');
+    }
 
     // 检查大田是否存在
     const field = await prisma.field.findUnique({
@@ -41,28 +50,9 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 安全地解析 JSON 数据
-    let parsedMaterials = null;
-    let parsedImages = null;
-
-    try {
-      if (materials && typeof materials === 'string') {
-        parsedMaterials = JSON.parse(materials);
-      }
-    } catch (e) {
-      console.warn('材料数据解析失败:', e);
-    }
-
-    try {
-      if (images && typeof images === 'string') {
-        parsedImages = JSON.parse(images);
-      }
-    } catch (e) {
-      console.warn('图片数据解析失败:', e);
-    }
-
-    // 创建活动
-    const activity = await prisma.activity.create({
+    // 更新活动
+    const activity = await prisma.activity.update({
+      where: { id },
       data: {
         fieldId,
         sectionId,
@@ -73,11 +63,11 @@ export default defineEventHandler(async (event) => {
         endTime: endTime ? new Date(endTime) : null,
         status: Number(status),
         executor,
-        materials: parsedMaterials,
+        materials: Array.isArray(materials) ? materials : null,
         dataSource: Number(dataSource),
         weatherInfo,
         effectDescription,
-        images: parsedImages,
+        images: Array.isArray(images) ? images : null,
         remark,
       },
       include: {
@@ -88,7 +78,7 @@ export default defineEventHandler(async (event) => {
 
     return useResponseSuccess(activity);
   } catch (error: any) {
-    console.error('创建活动失败:', error);
-    return useResponseError(error.message || '创建活动失败');
+    console.error('更新活动失败:', error);
+    return useResponseError(error.message || '更新活动失败');
   }
 });

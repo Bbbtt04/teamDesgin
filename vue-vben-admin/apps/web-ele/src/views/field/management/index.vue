@@ -6,7 +6,9 @@ import type { FormRules, FormInstance } from 'element-plus';
 
 // 导入API
 import { getFieldList, createField, updateField, deleteField } from '#/api/farm';
+import { getUserList } from '#/api/user';
 import type { FieldInfo } from '#/api/farm';
+import type { UserInfo } from '#/api/user';
 
 const router = useRouter();
 
@@ -45,7 +47,7 @@ const fieldForm = ref({
 const rules: FormRules = {
   name: [{ required: true, message: '请输入大田名称', trigger: 'blur' }],
   address: [{ required: true, message: '请输入大田地址', trigger: 'blur' }],
-  manager: [{ required: true, message: '请输入负责人', trigger: 'blur' }],
+  manager: [{ required: true, message: '请选择负责人', trigger: 'change' }],
   area: [
     { required: true, message: '请输入面积', trigger: 'blur' },
     { type: 'number', message: '面积必须为数字', trigger: 'blur' },
@@ -65,6 +67,9 @@ const areaUnitOptions = [
   { label: '公顷', value: '公顷' },
   { label: '平方米', value: '平方米' },
 ];
+
+// 负责人选项
+const managerOptions = ref<{ label: string; value: string }[]>([]);
 
 // 获取大田列表
 async function fetchFieldList() {
@@ -92,6 +97,22 @@ async function fetchFieldList() {
     fieldList.value = []; // 确保错误时也有空数组
   } finally {
     loading.value = false;
+  }
+}
+
+// 获取负责人列表
+async function fetchManagerOptions() {
+  try {
+    const res = await getUserList({});
+    console.log('获取负责人列表结果:', res);
+    const managers = res.items.map((user: { realName: any; username: any }) => ({
+      label: `${user.realName}（${user.username}）`,
+      value: user.realName,
+    }));
+    managerOptions.value = managers;
+  } catch (error) {
+    console.error('获取负责人列表失败', error);
+    ElMessage.error('获取负责人列表失败');
   }
 }
 
@@ -224,6 +245,7 @@ onMounted(async () => {
 
   // 获取数据
   fetchFieldList();
+  fetchManagerOptions();
 });
 </script>
 
@@ -329,7 +351,14 @@ onMounted(async () => {
           <el-input v-model="fieldForm.address" placeholder="请输入大田地址" />
         </el-form-item>
         <el-form-item label="负责人" prop="manager">
-          <el-input v-model="fieldForm.manager" placeholder="请输入负责人" />
+          <el-select v-model="fieldForm.manager" placeholder="请选择负责人">
+            <el-option
+              v-for="item in managerOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="面积" prop="area">
           <el-input-number v-model="fieldForm.area" :min="0" />
@@ -375,7 +404,7 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 :deep(.el-select) {
-  width: 120px;
+  width: 150px;
 }
 
 /* 添加全局样式确保下拉菜单样式正确 */

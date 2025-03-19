@@ -203,7 +203,7 @@ export function createActivity(data: Omit<FarmActivity, 'id' | 'createTime' | 'u
  * @returns 更新结果
  */
 export function updateActivity(id: string, data: Partial<FarmActivity>) {
-  return requestClient.put(`${activityPrefix}/update/${id}`, data);
+  return requestClient.put(`${activityPrefix}/${id}`, data);
 }
 
 /**
@@ -212,7 +212,7 @@ export function updateActivity(id: string, data: Partial<FarmActivity>) {
  * @returns 删除结果
  */
 export function deleteActivity(id: string) {
-  return requestClient.delete(`${activityPrefix}/delete/${id}`);
+  return requestClient.delete(`${activityPrefix}/${id}`);
 }
 
 /**

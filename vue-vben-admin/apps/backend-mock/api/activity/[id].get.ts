@@ -1,39 +1,31 @@
-import { getActivityById } from '../../utils/activity-data';
-import { useResponseSuccess } from '../../utils/response';
+import { defineEventHandler, getRouterParam } from 'h3';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
-    // 从URL获取活动ID
     const id = getRouterParam(event, 'id');
 
     if (!id) {
-      return {
-        code: 400,
-        data: null,
-        message: '缺少活动ID参数',
-      };
+      return useResponseError('缺少活动ID');
     }
 
-    // 获取活动详情
-    const activity = getActivityById(id);
+    // 查询活动
+    const activity = await prisma.activity.findUnique({
+      where: { id },
+      include: {
+        field: true,
+        section: true,
+      },
+    });
 
     if (!activity) {
-      return {
-        code: 404,
-        data: null,
-        message: `未找到ID为${id}的活动`,
-      };
+      return useResponseError('活动不存在');
     }
 
-    // 返回活动详情
     return useResponseSuccess(activity);
-  } catch (error) {
-    console.error('获取活动详情出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '获取活动详情失败',
-    };
+  } catch (error: any) {
+    console.error('获取活动详情失败:', error);
+    return useResponseError(error.message || '获取活动详情失败');
   }
 });

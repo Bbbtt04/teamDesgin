@@ -1,103 +1,58 @@
-import { activityList } from '../../utils/activity-data';
-import { usePageResponseSuccess } from '../../utils/response';
-import { ActivityType, ActivityStatus } from '../../utils/enums';
+import { defineEventHandler, getQuery } from 'h3';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
-    // 获取查询参数
     const query = getQuery(event);
-    const {
-      page = 1,
-      pageSize = 10,
-      fieldId,
-      sectionId,
-      activityType,
-      status,
-      startDate,
-      endDate,
-      sortBy = 'createTime',
-      sortOrder = 'desc'
-    } = query;
+    const { page = 1, pageSize = 10, fieldId, sectionId, activityType, status, startTime, endTime } = query;
 
-    // 根据查询参数过滤活动列表
-    let filteredActivities = [...activityList];
-
-    // 大田过滤
+    // 构建查询条件
+    const where: any = {};
     if (fieldId) {
-      filteredActivities = filteredActivities.filter(activity => activity.fieldId === fieldId);
+      where.fieldId = fieldId as string;
     }
-
-    // 分区过滤
     if (sectionId) {
-      filteredActivities = filteredActivities.filter(activity => activity.sectionId === sectionId);
+      where.sectionId = sectionId as string;
+    }
+    if (activityType) {
+      where.activityType = Number(activityType);
+    }
+    if (status) {
+      where.status = Number(status);
+    }
+    if (startTime && endTime) {
+      where.startTime = {
+        gte: new Date(startTime as string),
+        lte: new Date(endTime as string),
+      };
     }
 
-    // 活动类型过滤
-    if (activityType !== undefined && activityType !== '') {
-      filteredActivities = filteredActivities.filter(activity =>
-        activity.activityType === Number(activityType)
-      );
-    }
+    // 查询总数
+    const total = await prisma.activity.count({ where });
 
-    // 状态过滤
-    if (status !== undefined && status !== '') {
-      filteredActivities = filteredActivities.filter(activity =>
-        activity.status === Number(status)
-      );
-    }
+    // 查询列表
+    const items = await prisma.activity.findMany({
+      where,
+      skip: (Number(page) - 1) * Number(pageSize),
+      take: Number(pageSize),
+      orderBy: {
+        createTime: 'desc',
+      },
+      include: {
+        field: true,
+        section: true,
+      },
+    });
 
-    // 时间范围过滤
-    if (startDate && endDate) {
-      try {
-        const start = new Date(startDate as string);
-        const end = new Date(endDate as string);
-        filteredActivities = filteredActivities.filter(activity => {
-          const activityDate = new Date(activity.startTime);
-          return activityDate >= start && activityDate <= end;
-        });
-      } catch (e) {
-        console.error('日期解析错误:', e);
-      }
-    }
-
-    // 排序
-    if (sortBy) {
-      filteredActivities.sort((a, b) => {
-        const aValue = a[sortBy as keyof typeof a];
-        const bValue = b[sortBy as keyof typeof b];
-
-        // 处理不同类型的排序
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return sortOrder === 'asc'
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        } else {
-          // 数字或日期
-          return sortOrder === 'asc'
-            ? (aValue < bValue ? -1 : 1)
-            : (aValue > bValue ? -1 : 1);
-        }
-      });
-    }
-
-    // 分页处理
-    const pageNum = Number(page);
-    const pageSizeNum = Number(pageSize);
-
-    // 返回分页数据
-    return usePageResponseSuccess(
-      pageNum,
-      pageSizeNum,
-      filteredActivities,
-      { message: '获取农事活动列表成功' }
-    );
-  } catch (error) {
-    console.error('获取农事活动列表出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '获取农事活动列表失败',
-    };
+    return useResponseSuccess({
+      items,
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+    });
+  } catch (error: any) {
+    console.error('获取活动列表失败:', error);
+    return useResponseError(error.message || '获取活动列表失败');
   }
 });

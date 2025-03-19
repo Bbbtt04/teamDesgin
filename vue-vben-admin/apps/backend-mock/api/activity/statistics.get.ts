@@ -1,5 +1,6 @@
-import { activityList } from '~/utils/activity-data';
-import { useResponseSuccess } from '~/utils/response';
+import { defineEventHandler, getQuery } from 'h3';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 /**
  * 农事活动类型枚举
@@ -47,54 +48,49 @@ export enum DataSource {
   SYSTEM = 2
 }
 
-
 export default defineEventHandler(async (event) => {
   try {
-    // 获取查询参数
     const query = getQuery(event);
     const { fieldId, startDate, endDate } = query;
 
-    console.log('统计查询参数:', { fieldId, startDate, endDate });
-
-    // 根据查询参数过滤活动列表
-    let filteredActivities = [...activityList];
-    console.log('原始活动数量:', filteredActivities.length);
-
+    // 构建查询条件
+    const where: any = {};
     if (fieldId) {
-      console.log('按字段ID过滤:', fieldId);
-      console.log('活动字段ID示例:', filteredActivities.slice(0, 5).map(a => a.fieldId));
-      filteredActivities = filteredActivities.filter(activity => activity.fieldId === fieldId);
-      console.log('过滤后活动数量:', filteredActivities.length);
+      where.fieldId = fieldId as string;
+    }
+    if (startDate && endDate) {
+      where.startTime = {
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string),
+      };
     }
 
-    if (startDate && endDate) {
-      try {
-        const start = new Date(startDate as string);
-        const end = new Date(endDate as string);
-        filteredActivities = filteredActivities.filter(activity => {
-          const activityDate = new Date(activity.startTime);
-          return activityDate >= start && activityDate <= end;
-        });
-      } catch (e) {
-        console.error('日期解析错误:', e);
-      }
-    }
+    // 获取所有符合条件的活动
+    const activities = await prisma.activity.findMany({
+      where,
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
 
     // 按类型统计
-    const byType = {};
-    Object.values(ActivityType).forEach(type => {
-      if (typeof type === 'number') {
-        byType[type] = filteredActivities.filter(a => a.activityType === type).length;
-      }
-    });
+    const byType = {
+      0: 0, // 播种
+      1: 0, // 施肥
+      2: 0, // 灌溉
+      3: 0, // 除草
+      4: 0, // 病虫害防治
+      5: 0, // 收获
+      99: 0, // 其他
+    };
 
     // 按状态统计
-    const byStatus = {};
-    Object.values(ActivityStatus).forEach(status => {
-      if (typeof status === 'number') {
-        byStatus[status] = filteredActivities.filter(a => a.status === status).length;
-      }
-    });
+    const byStatus = {
+      0: 0, // 计划中
+      1: 0, // 进行中
+      2: 0, // 已完成
+      3: 0, // 已取消
+    };
 
     // 按月份统计
     const byMonth = {};
@@ -103,30 +99,32 @@ export default defineEventHandler(async (event) => {
       byMonth[month < 10 ? `0${month}` : `${month}`] = 0;
     }
 
-    filteredActivities.forEach(activity => {
+    // 统计数据
+    activities.forEach(activity => {
+      // 按类型统计
+      byType[activity.activityType] = (byType[activity.activityType] || 0) + 1;
+
+      // 按状态统计
+      byStatus[activity.status] = (byStatus[activity.status] || 0) + 1;
+
+      // 按月份统计
       const date = new Date(activity.startTime);
-      const month = date.getMonth() + 1; // 月份从0开始，所以+1
+      const month = date.getMonth() + 1;
       const monthKey = month < 10 ? `0${month}` : `${month}`;
       byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
     });
 
     // 返回数据
     const result = {
-      totalCount: filteredActivities.length,
+      totalCount: activities.length,
       byType,
       byStatus,
-      byMonth
+      byMonth,
     };
 
-    console.log('返回统计结果:', result);
     return useResponseSuccess(result);
-  } catch (error) {
-    console.error('获取农事活动统计出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '获取农事活动统计失败',
-    };
+  } catch (error: any) {
+    console.error('获取农事活动统计失败:', error);
+    return useResponseError(error.message || '获取农事活动统计失败');
   }
 });
