@@ -33,6 +33,10 @@ interface AccessState {
    * 用户角色
    */
   userRoles: string[];
+  /**
+   * 用户权限
+   */
+  userPermissions: string[];
 }
 
 /**
@@ -50,10 +54,14 @@ export const useUserStore = defineStore('core-user', {
     setUserRoles(roles: string[]) {
       this.userRoles = roles;
     },
+    setUserPermissions(permissions: string[]) {
+      this.userPermissions = permissions;
+    },
   },
   state: (): AccessState => ({
     userInfo: null,
     userRoles: [],
+    userPermissions: [],
   }),
 });
 

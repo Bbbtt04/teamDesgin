@@ -135,6 +135,7 @@ interface GenerateMenuAndRoutesOptions {
   forbiddenComponent?: RouteRecordRaw['component'];
   layoutMap?: ComponentRecordType;
   pageMap?: ComponentRecordType;
+  permissions?: string[];
   roles?: string[];
   router: Router;
   routes: RouteRecordRaw[];

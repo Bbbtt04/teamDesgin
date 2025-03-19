@@ -76,3 +76,10 @@ export function toggleUserStatus(id: string) {
 export function getUserDetail(id: string) {
   return requestClient.get(`${userPrefix}/detail/${id}`);
 }
+
+/**
+ * 获取用户权限
+ */
+export function getUserPermissions() {
+  return requestClient.get(`${userPrefix}/permissions`);
+}

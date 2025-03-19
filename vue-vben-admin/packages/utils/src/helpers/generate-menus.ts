@@ -25,6 +25,7 @@ async function generateMenus(
     // 转换为菜单结构
     // const path = matchRoute?.path ?? route.path;
     const { meta, name: routeName, redirect, children } = route;
+    console.log(route);
     const {
       activeIcon,
       badge,
@@ -66,7 +67,8 @@ async function generateMenus(
       path: resultPath as string,
       show: !route?.meta?.hideInMenu,
       children: resultChildren || [],
-    };
+      routeName
+      };
   });
 
   // 对菜单进行排序

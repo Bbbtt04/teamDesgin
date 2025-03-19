@@ -7,17 +7,15 @@ async function main() {
 
   // 1. 创建角色和权限
   console.log('创建角色和权限...')
-
   // 创建权限
   const permissions = [
     { name: 'system', id: '1' },
-    { name: 'user', id: '2' },
-    { name: 'role', id: '3' },
-    { name: 'monitor', id: '4' },
-    { name: 'equipment', id: '5' },
-    { name: 'farm', id: '6' },
-    { name: 'alert', id: '7' },
-    { name: 'analysis', id: '8' }
+    { name: 'farmdashboard', id: '2' },
+    { name: 'field', id: '3' },
+    { name: 'activity', id: '4' },
+    { name: 'alert', id: '5' },
+    { name: 'equipment', id: '6' },
+    { name: 'workspace', id: '7' }
   ]
 
   for (const perm of permissions) {
@@ -34,13 +32,13 @@ async function main() {
       id: '1',
       name: 'super_admin',
       description: '系统最高权限，可以管理所有功能和配置',
-      permissions: ['1', '2', '3', '4', '5', '6', '7', '8']
+      permissions: ['1', '2', '3', '4', '5', '6', '7']
     },
     {
       id: '2',
       name: 'farm_admin',
       description: '负责农田和设备的日常管理和监控',
-      permissions: ['4', '5', '6', '7', '8']
+      permissions: ['4', '5', '6', '7']
     },
     {
       id: '3',

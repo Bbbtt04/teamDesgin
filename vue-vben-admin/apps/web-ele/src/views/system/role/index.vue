@@ -6,7 +6,7 @@
       </el-button>
     </div>
 
-    <el-table :data="roleList" border style="width: 100%">
+    <el-table v-loading="loading" :data="roleList" border style="width: 100%">
       <el-table-column prop="code" label="角色编码" width="180" />
       <el-table-column prop="name" label="角色名称" width="180" />
       <el-table-column prop="description" label="角色描述" />
@@ -59,13 +59,12 @@
         <el-form-item label="权限配置" prop="permissions">
           <el-checkbox-group v-model="formData.permissions">
             <el-checkbox label="system">系统管理</el-checkbox>
-            <el-checkbox label="user">用户管理</el-checkbox>
-            <el-checkbox label="role">角色管理</el-checkbox>
-            <el-checkbox label="monitor">监控大屏</el-checkbox>
-            <el-checkbox label="equipment">设备管理</el-checkbox>
-            <el-checkbox label="farm">农田管理</el-checkbox>
+            <el-checkbox label="farmdashboard">农田仪表盘</el-checkbox>
+            <el-checkbox label="field">田地管理</el-checkbox>
+            <el-checkbox label="activity">活动管理</el-checkbox>
             <el-checkbox label="alert">告警管理</el-checkbox>
-            <el-checkbox label="analysis">数据分析</el-checkbox>
+            <el-checkbox label="equipment">设备管理</el-checkbox>
+            <el-checkbox label="workspace">工作区管理</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
       </el-form>
@@ -78,37 +77,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-// import { ROLES, ROLE_DESCRIPTIONS } from '../../../backend-mock/utils/mock-data';
-// 角色权限定义
-const ROLES = {
-  SUPER_ADMIN: 'super_admin',    // 系统管理员
-  FARM_ADMIN: 'farm_admin',      // 大田管理员
-  TECHNICIAN: 'technician',      // 技术员
-} as const;
-
-// 角色描述
-const ROLE_DESCRIPTIONS = {
-  [ROLES.SUPER_ADMIN]: {
-    name: '系统管理员',
-    description: '系统最高权限，可以管理所有功能和配置',
-    permissions: ['system', 'user', 'role', 'monitor', 'equipment', 'farm', 'alert', 'analysis'],
-  },
-  [ROLES.FARM_ADMIN]: {
-    name: '大田管理员',
-    description: '负责农田和设备的日常管理和监控',
-    permissions: ['monitor', 'equipment', 'farm', 'alert', 'analysis'],
-  },
-  [ROLES.TECHNICIAN]: {
-    name: '技术员',
-    description: '负责设备维护和故障处理',
-    permissions: ['equipment', 'alert'],
-  },
-} as const;
-
+import { getRoleList, createRole, updateRole, deleteRole } from '#/api/role';
 
 interface RoleForm {
+  id?: string;
   code: string;
   name: string;
   description: string;
@@ -124,49 +98,49 @@ const rules = {
 };
 
 // 角色列表数据
-const roleList = ref([
-  {
-    code: ROLES.SUPER_ADMIN,
-    name: ROLE_DESCRIPTIONS[ROLES.SUPER_ADMIN].name,
-    description: ROLE_DESCRIPTIONS[ROLES.SUPER_ADMIN].description,
-    permissions: ROLE_DESCRIPTIONS[ROLES.SUPER_ADMIN].permissions,
-  },
-  {
-    code: ROLES.FARM_ADMIN,
-    name: ROLE_DESCRIPTIONS[ROLES.FARM_ADMIN].name,
-    description: ROLE_DESCRIPTIONS[ROLES.FARM_ADMIN].description,
-    permissions: ROLE_DESCRIPTIONS[ROLES.FARM_ADMIN].permissions,
-  },
-  {
-    code: ROLES.TECHNICIAN,
-    name: ROLE_DESCRIPTIONS[ROLES.TECHNICIAN].name,
-    description: ROLE_DESCRIPTIONS[ROLES.TECHNICIAN].description,
-    permissions: ROLE_DESCRIPTIONS[ROLES.TECHNICIAN].permissions,
-  },
-]);
+const roleList = ref<RoleForm[]>([]);
+const loading = ref(false);
+
+// 获取角色列表
+const fetchRoleList = async () => {
+  try {
+    loading.value = true;
+    const res = await getRoleList();
+    roleList.value = res.items.map((item: any) => ({
+      id: item.id,
+      code: item.name, // 使用name作为code
+      name: item.name,
+      description: item.description,
+      permissions: item.permissions,
+    }));
+  } catch (error) {
+    console.error('获取角色列表失败:', error);
+    ElMessage.error('获取角色列表失败');
+  } finally {
+    loading.value = false;
+  }
+};
 
 // 权限标签类型映射
 const permissionTagTypes = {
   system: 'danger',
-  user: 'warning',
-  role: 'warning',
-  monitor: 'success',
-  equipment: 'success',
-  farm: 'success',
+  farmdashboard: 'success',
+  field: 'success',
+  activity: 'success',
   alert: 'info',
-  analysis: 'primary',
+  equipment: 'success',
+  workspace: 'success',
 } as const;
 
 // 权限名称映射
 const permissionNames = {
   system: '系统管理',
-  user: '用户管理',
-  role: '角色管理',
-  monitor: '监控大屏',
-  equipment: '设备管理',
-  farm: '农田管理',
+  farmdashboard: '农场仪表盘',
+  field: '田地管理',
+  activity: '活动管理',
   alert: '告警管理',
-  analysis: '数据分析',
+  equipment: '设备管理',
+  workspace: '工作空间',
 } as const;
 
 // 获取权限标签类型
@@ -206,7 +180,7 @@ const handleAdd = () => {
 };
 
 // 编辑角色
-const handleEdit = (row: any) => {
+const handleEdit = (row: RoleForm) => {
   dialogType.value = 'edit';
   formData.value = {
     ...row,
@@ -216,18 +190,23 @@ const handleEdit = (row: any) => {
 };
 
 // 删除角色
-const handleDelete = async (row: any) => {
+const handleDelete = async (row: RoleForm) => {
+  if (!row.id) return;
+  
   try {
     await ElMessageBox.confirm('确认删除该角色吗？', '提示', {
       type: 'warning',
     });
-    const index = roleList.value.findIndex((item) => item.code === row.code);
-    if (index !== -1) {
-      roleList.value.splice(index, 1);
-      ElMessage.success('删除成功');
+    
+    await deleteRole(row.id);
+    ElMessage.success('删除成功');
+    // 从列表中移除已删除的角色
+    roleList.value = roleList.value.filter(role => role.id !== row.id);
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('删除角色失败:', error);
+      ElMessage.error(error.message || '删除失败');
     }
-  } catch {
-    // 用户取消删除
   }
 };
 
@@ -237,27 +216,55 @@ const handleSubmit = async () => {
 
   await formRef.value.validate(async (valid: boolean) => {
     if (valid) {
-      if (dialogType.value === 'add') {
-        // 新增角色
-        roleList.value.push({
-          ...formData.value,
-        });
-      } else {
-        // 编辑角色
-        const index = roleList.value.findIndex(
-          (item) => item.code === formData.value.code
-        );
-        if (index !== -1) {
-          roleList.value[index] = {
-            ...formData.value,
-          };
+      try {
+        const roleData = {
+          name: formData.value.name,
+          description: formData.value.description,
+          permissions: formData.value.permissions,
+        };
+
+        if (dialogType.value === 'add') {
+          // 新增角色
+          const res = await createRole(roleData);
+          roleList.value.push({
+            id: res.data.id,
+            code: res.data.name,
+            name: res.data.name,
+            description: res.data.description,
+            permissions: res.data.permissions,
+          });
+          ElMessage.success('新增成功');
+        } else {
+          // 编辑角色
+          if (!formData.value.id) return;
+          await updateRole({
+            id: formData.value.id,
+            ...roleData,
+          });
+          const index = roleList.value.findIndex(role => role.id === formData.value.id);
+          if (index !== -1) {
+            roleList.value[index] = {
+              id: formData.value.id,
+              code: formData.value.name,
+              name: formData.value.name,
+              description: formData.value.description,
+              permissions: formData.value.permissions,
+            };
+          }
+          ElMessage.success('编辑成功');
         }
+        
+        dialogVisible.value = false;
+      } catch (error: any) {
+        console.error('保存角色失败:', error);
+        ElMessage.error(error.message || '保存失败');
       }
-      dialogVisible.value = false;
-      ElMessage.success(
-        dialogType.value === 'add' ? '新增成功' : '编辑成功'
-      );
     }
   });
 };
+
+// 页面加载时获取角色列表
+onMounted(() => {
+  fetchRoleList();
+});
 </script>

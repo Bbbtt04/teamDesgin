@@ -11,6 +11,7 @@ import { defineStore } from 'pinia';
 
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+import { getUserPermissions } from '#/api/user';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
@@ -98,7 +99,11 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;
     userInfo = await getUserInfoApi();
+    let permissions = await getUserPermissions();
+    // 映射name
+    const permissionNames = permissions.map((permission: any) => permission.name);
     userStore.setUserInfo(userInfo);
+    userStore.setUserPermissions(permissionNames);
     return userInfo;
   }
 
