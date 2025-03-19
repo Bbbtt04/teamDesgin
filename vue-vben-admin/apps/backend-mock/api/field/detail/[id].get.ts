@@ -1,10 +1,13 @@
-import { getFieldById } from '~/utils/field-data';
-import { useResponseSuccess } from '~/utils/response';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
     const id = event.context.params.id;
-    const field = getFieldById(id);
+    const field = await prisma.field.findUnique({
+      where: { id },
+      include: { sections: true },
+    });
 
     if (!field) {
       return {
@@ -16,13 +19,8 @@ export default defineEventHandler(async (event) => {
     }
 
     return useResponseSuccess(field);
-  } catch (error) {
+  } catch (error: any) {
     console.error('获取大田详情出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '获取大田详情失败',
-    };
+    return useResponseError(error.message || '获取大田详情失败');
   }
 });

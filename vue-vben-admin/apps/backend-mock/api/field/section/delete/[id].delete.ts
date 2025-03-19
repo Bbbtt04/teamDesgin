@@ -1,28 +1,18 @@
 import { deleteFieldSection } from '~/utils/field-data';
-import { useResponseSuccess } from '~/utils/response';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
     const id = event.context.params.id;
-    const result = deleteFieldSection(id);
+    const result = await deleteFieldSection(id);
 
     if (!result) {
-      return {
-        code: 404,
-        data: null,
-        error: 'Not Found',
-        message: '分区信息不存在',
-      };
+      return useResponseError('分区信息不存在', 404);
     }
 
     return useResponseSuccess(null);
-  } catch (error) {
+  } catch (error: any) {
     console.error('删除分区出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '删除分区失败',
-    };
+    return useResponseError(error.message || '删除分区失败');
   }
 });

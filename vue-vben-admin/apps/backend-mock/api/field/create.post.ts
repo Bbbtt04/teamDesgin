@@ -1,29 +1,31 @@
-import { addField } from '~/utils/field-data';
-import { useResponseSuccess } from '~/utils/response';
+import { defineEventHandler, readBody } from 'h3';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
+    const { name, address, manager, area, areaUnit, status, remark } = body;
 
-    // 验证必要字段
-    if (!body.name || !body.address || !body.manager || body.area === undefined) {
-      return {
-        code: 400,
-        data: null,
-        error: 'Bad Request',
-        message: '请提供完整的大田信息',
-      };
-    }
+    // 创建田地
+    const field = await prisma.field.create({
+      data: {
+        name,
+        address,
+        manager,
+        area,
+        areaUnit,
+        status,
+        remark,
+      },
+    });
 
-    const newField = addField(body);
-    return useResponseSuccess(newField);
-  } catch (error) {
-    console.error('创建大田出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '创建大田失败',
-    };
+    return useResponseSuccess({
+      message: '创建田地成功',
+      data: field,
+    });
+  } catch (error: any) {
+    console.error('创建田地失败:', error);
+    return useResponseError(error.message || '创建田地失败');
   }
 });

@@ -1,39 +1,40 @@
-import { addFieldSection } from '~/utils/field-data';
-import { useResponseSuccess } from '~/utils/response';
+import { defineEventHandler, readBody } from 'h3';
+import { prisma } from '~/modules/db';
+import { useResponseSuccess, useResponseError } from '~/utils/response';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
+    const { fieldId, name, area, areaUnit, cropType, status, remark } = body;
 
-    // 验证必要字段
-    if (!body.fieldId || !body.name || body.area === undefined) {
-      return {
-        code: 400,
-        data: null,
-        error: 'Bad Request',
-        message: '请提供完整的分区信息',
-      };
+    // 验证大田是否存在
+    const field = await prisma.field.findUnique({
+      where: { id: fieldId },
+    });
+
+    if (!field) {
+      return useResponseError('大田信息不存在', 404);
     }
 
-    const newSection = addFieldSection(body);
+    // 创建分区
+    const section = await prisma.fieldSection.create({
+      data: {
+        fieldId,
+        name,
+        area,
+        areaUnit,
+        cropType,
+        status,
+        remark,
+      },
+    });
 
-    if (!newSection) {
-      return {
-        code: 404,
-        data: null,
-        error: 'Not Found',
-        message: '大田信息不存在',
-      };
-    }
-
-    return useResponseSuccess(newSection);
-  } catch (error) {
-    console.error('创建分区出错:', error);
-    return {
-      code: 500,
-      data: null,
-      error,
-      message: '创建分区失败',
-    };
+    return useResponseSuccess({
+      message: '创建分区成功',
+      data: section,
+    });
+  } catch (error: any) {
+    console.error('创建分区失败:', error);
+    return useResponseError(error.message || '创建分区失败');
   }
 });
