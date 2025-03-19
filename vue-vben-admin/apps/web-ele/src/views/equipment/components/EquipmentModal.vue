@@ -29,9 +29,9 @@
       <el-select v-model="form.fieldId" placeholder="请选择农场" style="width: 100%">
         <el-option
           v-for="item in fieldOptions"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
         />
       </el-select>
     </el-form-item>
@@ -45,8 +45,19 @@
         />
       </el-select>
     </el-form-item>
+    <el-form-item label="安装位置" prop="location">
+      <el-input v-model="form.location" placeholder="请输入安装位置" />
+    </el-form-item>
     <el-form-item label="制造商" prop="manufacturer">
       <el-input v-model="form.manufacturer" placeholder="请输入制造商" />
+    </el-form-item>
+    <el-form-item label="购买日期" prop="purchaseDate">
+      <el-date-picker
+        v-model="form.purchaseDate"
+        type="date"
+        placeholder="请选择购买日期"
+        style="width: 100%"
+      />
     </el-form-item>
     <el-form-item label="安装时间" prop="installTime">
       <el-date-picker
@@ -56,8 +67,21 @@
         style="width: 100%"
       />
     </el-form-item>
-    <el-form-item label="IP地址">
-      <el-input v-model="form.ipAddress" placeholder="请输入IP地址" />
+    <el-form-item label="最后维护" prop="lastMaintenanceTime">
+      <el-date-picker
+        v-model="form.lastMaintenanceTime"
+        type="datetime"
+        placeholder="请选择最后维护时间"
+        style="width: 100%"
+      />
+    </el-form-item>
+    <el-form-item label="下次维护" prop="nextMaintenanceTime">
+      <el-date-picker
+        v-model="form.nextMaintenanceTime"
+        type="datetime"
+        placeholder="请选择下次维护时间"
+        style="width: 100%"
+      />
     </el-form-item>
     <el-form-item label="设备描述">
       <el-input
@@ -75,10 +99,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import { EquipmentStatus, EquipmentType } from '#/api/equipment/model';
 import type { Equipment } from '#/api/equipment/model';
+import { getFieldList } from '#/api/farm';
 
 const props = defineProps<{
   formData?: Partial<Equipment>;
@@ -100,9 +126,12 @@ const form = reactive<Partial<Equipment>>({
   serialNumber: '',
   fieldId: undefined,
   status: undefined,
+  location: '',
   manufacturer: '',
+  purchaseDate: '',
   installTime: '',
-  ipAddress: '',
+  lastMaintenanceTime: '',
+  nextMaintenanceTime: '',
   description: '',
   ...props.formData,
 });
@@ -127,12 +156,19 @@ const typeMap = {
   [EquipmentType.OTHER]: '其他设备',
 };
 
-// 农场选项（需要替换为实际的API调用）
-const fieldOptions = [
-  { label: '农场1', value: '1' },
-  { label: '农场2', value: '2' },
-  { label: '农场3', value: '3' },
-];
+// 农场选项
+const fieldOptions = ref([]);
+
+// 加载农场选项
+async function loadFieldOptions() {
+  try {
+    const data = await getFieldList();
+    fieldOptions.value = data.items || [];
+  } catch (error) {
+    console.error('加载农场选项失败', error);
+    ElMessage.error('加载农场选项失败');
+  }
+}
 
 // 表单验证规则
 const rules = {
@@ -152,4 +188,9 @@ const handleSubmit = async () => {
   await formRef.value.validate();
   emit('submit');
 };
+
+// 初始化加载数据
+onMounted(() => {
+  loadFieldOptions();
+});
 </script>

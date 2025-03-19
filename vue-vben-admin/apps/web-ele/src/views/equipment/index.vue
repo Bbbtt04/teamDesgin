@@ -62,9 +62,9 @@
             >
               <el-option
                 v-for="item in fieldOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
               />
             </el-select>
           </el-form-item>
@@ -97,25 +97,25 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="电池电量" width="120">
+        <el-table-column label="所属农场" width="150">
           <template #default="{ row }">
-            <div v-if="row.batteryLevel !== undefined">
-              <el-progress
-                :percentage="row.batteryLevel"
-                :color="getBatteryColor(row.batteryLevel)"
-              />
-            </div>
-            <span v-else>--</span>
+            {{ getFieldDetailSync(row.fieldId) }}
           </template>
         </el-table-column>
-        <el-table-column label="最后上报时间" width="180">
-          <template #default="{ row }">
-            {{ formatDateTime(row.lastReportTime) }}
-          </template>
-        </el-table-column>
+        <el-table-column prop="location" label="安装位置" width="150" />
         <el-table-column label="安装时间" width="180">
           <template #default="{ row }">
             {{ formatDateTime(row.installTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="最后维护" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.lastMaintenanceTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="下次维护" width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.nextMaintenanceTime) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="190">
@@ -166,11 +166,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import { getEquipmentList, deleteEquipment } from '#/api/equipment';
+import { getFieldList, getFieldDetail as fetchFieldDetail } from '#/api/farm';
 import { formatDateTime } from '#/utils/formatTime';
 import { EquipmentStatus, EquipmentType } from '#/api/equipment/model';
 import type { Equipment } from '#/api/equipment/model';
@@ -224,12 +225,36 @@ const typeMap: Record<EquipmentType, string> = {
   [EquipmentType.OTHER]: '其他设备',
 };
 
-// 农场选项（需要替换为实际的API调用）
-const fieldOptions = ref([
-  { label: '农场1', value: '1' },
-  { label: '农场2', value: '2' },
-  { label: '农场3', value: '3' },
-]);
+// 农场选项
+const fieldOptions = ref<{ id: string; name: string }[]>([]);
+
+// 获取农场选项
+async function loadFieldOptions() {
+  try {
+    const data = await getFieldList();
+    fieldOptions.value = data.items || [];
+  } catch (error) {
+    console.error('加载农场选项失败', error);
+    ElMessage.error('加载农场选项失败');
+  }
+}
+
+// 获取农场详情
+async function getFieldDetail(fieldId: string) {
+  try {
+    const data = await fetchFieldDetail(fieldId);
+    return data.name || '--';
+  } catch (error) {
+    console.error('获取农场详情失败', error);
+    return '--';
+  }
+}
+
+// 同步获取农场详情
+function getFieldDetailSync(fieldId: string) {
+  const field = fieldOptions.value.find(item => item.id === fieldId);
+  return field ? field.name : '--';
+}
 
 // 获取设备状态类型
 const getStatusType = (status: EquipmentStatus): TagProps['type'] => {
@@ -239,13 +264,6 @@ const getStatusType = (status: EquipmentStatus): TagProps['type'] => {
 // 获取设备状态文本
 const getStatusText = (status: EquipmentStatus): string => {
   return statusMap[status]?.text || '未知';
-};
-
-// 获取电池颜色
-const getBatteryColor = (level: number): string => {
-  if (level < 20) return '#f56c6c';
-  if (level < 60) return '#e6a23c';
-  return '#67c23a';
 };
 
 // 加载设备列表数据
@@ -336,7 +354,10 @@ function handleCurrentChange(page: number) {
 }
 
 // 初始化加载数据
-loadData();
+onMounted(() => {
+  loadData();
+  loadFieldOptions();
+});
 </script>
 
 <style lang="less" scoped>

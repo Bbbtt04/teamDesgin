@@ -152,25 +152,25 @@ model Activity {
 
 // 设备模型
 model Equipment {
-  id                  String      @id @default(uuid())
-  name                String
-  type                Int
-  model               String
-  serialNumber        String      @unique
-  status              Int
-  location            String?
-  fieldId             String?
-  sectionId           String?
-  installTime         DateTime?
-  lastMaintenanceTime DateTime?
-  nextMaintenanceTime DateTime?
-  description         String?
-  manufacturer        String?
-  purchaseDate        DateTime?
-  createTime          DateTime    @default(now())
-  updateTime          DateTime    @updatedAt
-  farmTrends          FarmTrend[]
-  alerts              Alert[]
+  id                  String      @id @default(uuid()) // 设备ID
+  name                String      // 设备名称
+  type                Int         // 设备类型
+  model               String      // 设备型号
+  serialNumber        String      @unique // 序列号
+  status              Int         // 设备状态
+  location            String?     // 设备位置
+  fieldId             String?     // 大田ID
+  sectionId           String?     // 分区ID
+  installTime         DateTime?   // 安装时间
+  lastMaintenanceTime DateTime?   // 上次维护时间
+  nextMaintenanceTime DateTime?   // 下次维护时间
+  description         String?     // 设备描述
+  manufacturer        String?     // 制造商
+  purchaseDate        DateTime?   // 购买日期
+  createTime          DateTime    @default(now()) // 创建时间
+  updateTime          DateTime    @updatedAt // 更新时间
+  farmTrends          FarmTrend[] // 农场动态
+  alerts              Alert[]     // 警报
 }
 
 // 农场动态模型

@@ -26,14 +26,14 @@ export function updateEquipment(data: Partial<Equipment> & { id: string }) {
 
 // 删除设备
 export function deleteEquipment(id: string) {
-  return requestClient.delete(`${apiPrefix}/delete/${id}`);
+  return requestClient.delete(`${apiPrefix}/${id}`);
 }
 
 /**
  * 导出设备列表
  */
 export function exportEquipment(params: Partial<EquipmentQueryParams>) {
-  return http.get(`${apiPrefix}/export`, {
+  return requestClient.get(`${apiPrefix}/export`, {
     params,
     responseType: 'blob',
   });
@@ -52,7 +52,7 @@ export interface EquipmentStatistics {
 }
 
 export function getEquipmentStatistics(fieldId?: string) {
-  return http.get<EquipmentStatistics>(`${apiPrefix}/statistics`, {
+  return requestClient.get<EquipmentStatistics>(`${apiPrefix}/statistics`, {
     params: { fieldId },
   });
 }

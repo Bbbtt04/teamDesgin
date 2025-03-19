@@ -3,21 +3,21 @@
  */
 export enum EquipmentType {
   /** 温湿度传感器 */
-  TEMP_HUMIDITY_SENSOR = 0,
+  TEMP_HUMIDITY_SENSOR = 1,
   /** 土壤湿度传感器 */
-  SOIL_MOISTURE_SENSOR = 1,
+  SOIL_MOISTURE_SENSOR = 2,
   /** 光照传感器 */
-  LIGHT_SENSOR = 2,
+  LIGHT_SENSOR = 3,
   /** 二氧化碳传感器 */
-  CO2_SENSOR = 3,
+  CO2_SENSOR = 4,
   /** 摄像头 */
-  CAMERA = 4,
+  CAMERA = 5,
   /** 气象站 */
-  WEATHER_STATION = 5,
+  WEATHER_STATION = 6,
   /** 灌溉控制器 */
-  IRRIGATION_CONTROLLER = 6,
+  IRRIGATION_CONTROLLER = 7,
   /** 其他 */
-  OTHER = 99
+  OTHER = 8,
 }
 
 /**
@@ -25,13 +25,13 @@ export enum EquipmentType {
  */
 export enum EquipmentStatus {
   /** 在线 */
-  ONLINE = 0,
+  ONLINE = 1,
   /** 离线 */
-  OFFLINE = 1,
+  OFFLINE = 2,
   /** 故障 */
-  FAULT = 2,
+  FAULT = 3,
   /** 维护中 */
-  MAINTENANCE = 3
+  MAINTENANCE = 4,
 }
 
 /**
@@ -43,21 +43,26 @@ export interface Equipment {
   type: EquipmentType;
   model: string;
   serialNumber: string;
-  fieldId: string;
-  sectionId?: string;
   status: EquipmentStatus;
-  batteryLevel?: number;
-  lastReportTime: string;
-  installTime: string;
+  location?: string;
+  fieldId?: string;
+  sectionId?: string;
+  installTime?: string;
+  lastMaintenanceTime?: string;
+  nextMaintenanceTime?: string;
   description?: string;
-  manufacturer: string;
-  ipAddress?: string;
-  location?: {
-    latitude: number;
-    longitude: number;
-  };
+  manufacturer?: string;
+  purchaseDate?: string;
   createTime: string;
   updateTime: string;
+  field?: {
+    id: string;
+    name: string;
+  };
+  section?: {
+    id: string;
+    name: string;
+  };
 }
 
 /**
