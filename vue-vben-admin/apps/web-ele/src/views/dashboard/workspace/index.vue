@@ -28,8 +28,8 @@ const quickNavItems: WorkbenchQuickNavItem[] = [
   {
     color: '#1fdaca',
     icon: 'ep:monitor',
-    title: '监控大屏',
-    url: '/monitor',
+    title: '数据监控',
+    url: '/farm-dashboard',
   },
   {
     color: '#3fb27f',
