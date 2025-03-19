@@ -46,10 +46,9 @@ export interface LogQueryParams {
   username?: string;
   operationType?: OperationType;
   status?: OperationStatus;
+  module?: string;
   startTime?: string;
   endTime?: string;
-  dateRange?: string[];
-  module?: string;
 }
 
 /**
@@ -66,7 +65,6 @@ export interface LogInfo {
   requestParams: string;
   responseData: string;
   status: OperationStatus;
-  errorMessage?: string;
   ip: string;
   browser: string;
   os: string;
@@ -74,10 +72,22 @@ export interface LogInfo {
 }
 
 /**
+ * 日志列表响应
+ */
+export interface LogListResponse {
+  data: {
+    items: LogInfo[];
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+/**
  * 获取操作日志列表
  */
 export function getLogList(params: LogQueryParams) {
-  return requestClient.post<{ items: LogInfo[]; total: number }>(`${apiPrefix}/list`, params);
+  return requestClient.get<LogListResponse>(`${apiPrefix}/list`, { params });
 }
 
 /**

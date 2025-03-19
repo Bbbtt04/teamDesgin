@@ -27,7 +27,8 @@ const searchForm = reactive<LogQueryParams>({
   operationType: undefined,
   status: undefined,
   module: '',
-  dateRange: [],
+  startTime: '',
+  endTime: '',
 });
 
 // 操作类型选项
@@ -49,48 +50,6 @@ const operationStatusOptions = [
   { label: '失败', value: OperationStatus.FAIL },
 ];
 
-// 生成模拟数据
-function generateMockLogs(count: number): LogInfo[] {
-  const modules = ['用户管理', '角色管理', '设备管理', '告警管理', '日志管理'];
-  const descriptions = [
-    '查询列表',
-    '创建记录',
-    '更新记录',
-    '删除记录',
-    '导出数据',
-    '处理告警',
-    '忽略告警',
-    '用户登录',
-    '用户登出',
-  ];
-  const usernames = ['admin', 'user1', 'user2', 'user3', 'user4'];
-
-  return Array.from({ length: count }, (_, index) => ({
-    id: `log_${index + 1}`,
-    username: usernames[Math.floor(Math.random() * usernames.length)] || 'unknown',
-    operationType: Object.values(OperationType)[
-      Math.floor(Math.random() * Object.values(OperationType).length)
-    ] as OperationType,
-    module: modules[Math.floor(Math.random() * modules.length)] || '未知模块',
-    description: descriptions[Math.floor(Math.random() * descriptions.length)] || '未知操作',
-    requestUrl: '/api/xxx',
-    requestMethod: 'POST',
-    requestParams: '{"page":1,"pageSize":10}',
-    responseData: '{"code":0,"message":"success"}',
-    status: Math.random() > 0.1 ? OperationStatus.SUCCESS : OperationStatus.FAIL,
-    errorMessage: Math.random() > 0.1 ? undefined : '操作失败',
-    ip: `192.168.1.${Math.floor(Math.random() * 255)}`,
-    browser: 'Chrome',
-    os: 'Windows 10',
-    createTime: new Date(
-      Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)
-    ).toISOString(),
-  }));
-}
-
-// 模拟数据
-const mockLogs = generateMockLogs(100);
-
 // 获取日志列表
 async function fetchLogList() {
   loading.value = true;
@@ -101,48 +60,11 @@ async function fetchLogList() {
       ...searchForm,
     };
 
-    // 筛选数据
-    let filteredLogs = [...mockLogs];
-
-    if (params.username && params.username.trim()) {
-      filteredLogs = filteredLogs.filter((log) =>
-        log.username.toLowerCase().includes(params.username!.toLowerCase())
-      );
+    const res = await getLogList(params);
+    if (res.data) {
+      logList.value = res.data.items;
+      total.value = res.data.total;
     }
-
-    if (params.operationType) {
-      filteredLogs = filteredLogs.filter((log) => log.operationType === params.operationType);
-    }
-
-    if (params.status) {
-      filteredLogs = filteredLogs.filter((log) => log.status === params.status);
-    }
-
-    if (params.module && params.module.trim()) {
-      filteredLogs = filteredLogs.filter((log) =>
-        log.module.toLowerCase().includes(params.module!.toLowerCase())
-      );
-    }
-
-    if (params.startTime && params.endTime) {
-      const start = new Date(params.startTime).getTime();
-      const end = new Date(params.endTime).getTime();
-      filteredLogs = filteredLogs.filter((log) => {
-        const time = new Date(log.createTime).getTime();
-        return time >= start && time <= end;
-      });
-    }
-
-    // 排序：按创建时间倒序
-    filteredLogs.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime());
-
-    // 分页
-    const start = ((params.page || 1) - 1) * (params.pageSize || 10);
-    const end = start + (params.pageSize || 10);
-    const items = filteredLogs.slice(start, end);
-
-    logList.value = items;
-    total.value = filteredLogs.length;
   } catch (error) {
     console.error('获取日志列表失败', error);
     ElMessage.error('获取日志列表失败');
@@ -163,7 +85,8 @@ function resetSearch() {
   searchForm.operationType = undefined;
   searchForm.status = undefined;
   searchForm.module = '';
-  searchForm.dateRange = [];
+  searchForm.startTime = '';
+  searchForm.endTime = '';
   handleSearch();
 }
 
@@ -172,39 +95,14 @@ async function handleExport() {
   try {
     loading.value = true;
     const params: LogQueryParams = { ...searchForm };
-    if (searchForm.dateRange?.length === 2) {
-      params.startTime = searchForm.dateRange[0];
-      params.endTime = searchForm.dateRange[1];
-    }
-
-    // 生成CSV数据
-    const headers = [
-      '用户名',
-      '操作类型',
-      '模块',
-      '操作描述',
-      '状态',
-      'IP地址',
-      '浏览器',
-      '操作系统',
-      '操作时间',
-    ].join(',');
-
-    const rows = mockLogs
-      .map(
-        (log) =>
-          `${log.username},${log.operationType},${log.module},${log.description},${log.status},${log.ip},${log.browser},${log.os},${new Date(
-            log.createTime
-          ).toLocaleString()}`
-      )
-      .join('\n');
-
-    const csvContent = `${headers}\n${rows}`;
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const res = await exportLogs(params);
+    
+    // 创建下载链接
+    const blob = new Blob([res], { type: 'application/vnd.ms-excel' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `操作日志_${new Date().toLocaleString()}.csv`;
+    link.download = `操作日志_${new Date().toLocaleString()}.xlsx`;
     link.click();
     window.URL.revokeObjectURL(url);
     ElMessage.success('导出成功');
@@ -225,14 +123,7 @@ async function handleDelete(ids: string[]) {
       type: 'warning',
     });
 
-    // 从模拟数据中删除
-    ids.forEach((id) => {
-      const index = mockLogs.findIndex((log) => log.id === id);
-      if (index !== -1) {
-        mockLogs.splice(index, 1);
-      }
-    });
-
+    await deleteLogs(ids);
     ElMessage.success('删除成功');
     fetchLogList();
   } catch (error) {
@@ -252,8 +143,7 @@ async function handleClear() {
       type: 'warning',
     });
 
-    // 清空模拟数据
-    mockLogs.length = 0;
+    await clearLogs();
     ElMessage.success('清空成功');
     fetchLogList();
   } catch (error) {
@@ -348,6 +238,15 @@ onMounted(() => {
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             value-format="YYYY-MM-DD"
+            @change="(val) => {
+              if (val) {
+                searchForm.startTime = val[0];
+                searchForm.endTime = val[1];
+              } else {
+                searchForm.startTime = '';
+                searchForm.endTime = '';
+              }
+            }"
           />
         </el-form-item>
         <el-form-item>
